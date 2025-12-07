@@ -45,7 +45,7 @@ public class ChatServiceImpl implements ChatService {
                         .text(this.systemPromptConfig.getChatSystemMessage().get()) // 设置系统提示语
                         .param("now", DateUtil.now()) // 设置当前时间的参数
                 )
-                .advisors(advisor -> advisor.param(AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY, conversationId))
+                .advisors(advisor -> advisor.param(AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY, conversationId))//Advisor 会自动拦截请求，执行数据插入Redis
                 .user(question)
                 .stream()
                 .chatResponse()

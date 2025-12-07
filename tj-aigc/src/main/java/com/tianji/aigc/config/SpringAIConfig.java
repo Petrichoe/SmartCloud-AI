@@ -1,5 +1,6 @@
 package com.tianji.aigc.config;
 
+import com.tianji.aigc.memory.HybridChatMemory;
 import com.tianji.aigc.memory.RedisChatMemory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
@@ -9,6 +10,8 @@ import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 @Configuration
 public class SpringAIConfig {
@@ -33,9 +36,18 @@ public class SpringAIConfig {
         return new SimpleLoggerAdvisor();
     }
 
-    @Bean
+    // 使用Redis存储会话记忆
+    /*@Bean
     public ChatMemory chatMemory() {
         return new RedisChatMemory();
+    }*/
+
+
+    // 使用MongoDB存储会话记忆
+    @Bean
+    public ChatMemory chatMemory(StringRedisTemplate stringRedisTemplate, MongoTemplate mongoTemplate) {
+        // 使用新的混合存储实现
+        return new HybridChatMemory(stringRedisTemplate, mongoTemplate);
     }
 
     /**
