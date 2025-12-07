@@ -4,6 +4,7 @@ import cn.hutool.core.stream.StreamUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.tianji.aigc.config.SessionProperties;
+import com.tianji.aigc.domain.po.ChatMessagePO;
 import com.tianji.aigc.domain.po.ChatSession;
 import com.tianji.aigc.domain.vo.ChatEventVO;
 import com.tianji.aigc.domain.vo.MessageVO;
@@ -19,6 +20,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -42,6 +47,10 @@ public class ChatSessionServiceImpl extends ServiceImpl<ChatSessionMapper, ChatS
 
     // 历史消息数量，默认1000条
     public static final int HISTORY_MESSAGE_COUNT = 1000;
+
+    // 注入 MongoTemplate
+    private final MongoTemplate mongoTemplate;
+
     @Override
     public SessionVO createSession(Integer num) {
         SessionVO sessionVO = BeanUtils.copyBean(sessionProperties, SessionVO.class);
@@ -72,7 +81,21 @@ public class ChatSessionServiceImpl extends ServiceImpl<ChatSessionMapper, ChatS
     public List<MessageVO> getSessionDetailById(String sessionId) {
         // 根据会话ID获取对话ID
         String conversationId = ChatService.getConversationId(sessionId);
-        // 从Redis中获取历史消息
+        // --- 改造开始：改为查 MongoDB ---
+        Query query = Query.query(Criteria.where("sessionId").is(conversationId))
+                .with(Sort.by(Sort.Order.asc("createTime"))); // 按时间正序
+
+        List<ChatMessagePO> historyList = mongoTemplate.find(query, ChatMessagePO.class);
+
+        return historyList.stream()
+                .map(po -> MessageVO.builder()
+                        .type(MessageTypeEnum.valueOf(po.getType().toUpperCase()))
+                        .content(po.getContent())
+                        .build())
+                .toList();
+        // --- 改造结束 ---
+
+        /*// 从Redis中获取历史消息
         List<Message> messageList = this.chatMemory.get(conversationId, HISTORY_MESSAGE_COUNT);
         // 过滤并转换消息列表
         return StreamUtil.of(messageList)
@@ -83,7 +106,7 @@ public class ChatSessionServiceImpl extends ServiceImpl<ChatSessionMapper, ChatS
                         .content(message.getText())
                         .type(MessageTypeEnum.valueOf(message.getMessageType().name()))
                         .build())
-                .toList();
+                .toList();*/
     }
 
 
