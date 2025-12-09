@@ -86,7 +86,6 @@ public class ChatSessionServiceImpl extends ServiceImpl<ChatSessionMapper, ChatS
                 .with(Sort.by(Sort.Order.asc("createTime"))); // 按时间正序
 
         List<ChatMessagePO> historyList = mongoTemplate.find(query, ChatMessagePO.class);
-
         return historyList.stream()
                 .map(po -> MessageVO.builder()
                         .type(MessageTypeEnum.valueOf(po.getType().toUpperCase()))

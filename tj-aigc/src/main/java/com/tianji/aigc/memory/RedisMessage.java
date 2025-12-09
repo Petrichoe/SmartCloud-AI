@@ -19,4 +19,5 @@ public class RedisMessage {
     private List<ToolResponseMessage.ToolResponse> toolResponses = List.of();
     private Map<String, Object> params = Map.of();
 
+    public Map<String, Object> properties=Map.of();
 }
