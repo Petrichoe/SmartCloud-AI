@@ -1,21 +1,27 @@
 package com.tianji.aigc.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.StrUtil;
 import com.tianji.aigc.config.SystemPromptConfig;
 import com.tianji.aigc.config.ToolResultHolder;
 import com.tianji.aigc.constants.Constant;
 import com.tianji.aigc.enums.ChatEventTypeEnum;
 import com.tianji.aigc.domain.vo.ChatEventVO;
 import com.tianji.aigc.service.ChatService;
+import com.tianji.common.utils.UserContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -32,6 +38,8 @@ public class ChatServiceImpl implements ChatService {
     private final SystemPromptConfig systemPromptConfig;
 
     private final ChatMemory chatMemory;
+
+    private final VectorStore vectorStore;
 
     // 存储大模型的生成状态，这里采用ConcurrentHashMap是确保线程安全
     // 目前的版本暂时用Map实现，如果考虑分布式环境的话，可以考虑用redis来实现
@@ -51,14 +59,21 @@ public class ChatServiceImpl implements ChatService {
         // 生成请求id
         var requestId = IdUtil.fastSimpleUUID();
 
+        // 获取用户id
+        var userId = UserContext.getUser();
+
         return this.chatClient.prompt()
                 .system(promptSystem -> promptSystem
                         .text(this.systemPromptConfig.getChatSystemMessage().get()) // 设置系统提示语
                         .param("now", DateUtil.now()) // 设置当前时间的参数
                 )
-                .advisors(advisor -> advisor.param(AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY, conversationId))//Advisor 会自动拦截请求，执行数据插入Redis
+                .advisors(advisor -> advisor
+                        // 设置RAG查询，因为数据量不大，所以直接全部查询
+                        .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.builder().query("").topK(999).build()))
+                        .param(AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY, conversationId))//Advisor 会自动拦截请求，执行数据插入Redis
                 .toolContext(MapUtil.<String, Object>builder() // 设置tool列表
                         .put(Constant.REQUEST_ID, requestId) // 设置请求id参数
+                        .put(Constant.USER_ID, userId) // 设置用户id参数
                         .build()
                 )
                 .user(question)
@@ -78,6 +93,14 @@ public class ChatServiceImpl implements ChatService {
                 // 输出过程中，判断是否正在输出，如果正在输出，则继续输出，否则结束输出
                 .takeWhile(s -> Optional.ofNullable(GENERATE_STATUS.get(sessionId)).orElse(false))
                 .map(chatResponse -> {
+                    // 对于响应结果进行处理，如果是最后一条数据，就把此次消息id放到内存中
+                    // 主要用于存储消息数据到 redis中，可以根据消息id获取的请求id，再通过请求id就可以获取到参数列表了
+                    // 从而解决，在历史聊天记录中没有外参数的问题
+                    var finishReason = chatResponse.getResult().getMetadata().getFinishReason();
+                    if (StrUtil.equals(Constant.STOP, finishReason)) {
+                        var messageId = chatResponse.getMetadata().getId();
+                        ToolResultHolder.put(messageId, Constant.REQUEST_ID, requestId);
+                    }
                     // 获取大模型的输出的内容
                     String text = chatResponse.getResult().getOutput().getText();
                     // 追加到输出内容中

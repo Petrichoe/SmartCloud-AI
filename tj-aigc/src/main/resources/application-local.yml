@@ -1,7 +1,7 @@
 spring:
-  ai:
-    dashscope:
-      api-key: ${ALIYUN_API_KEY}
+  #ai:
+    #dashscope:
+      #api-key: ${ALIYUN_API_KEY}
 
   cloud:
     nacos:
@@ -37,3 +37,8 @@ logging:
 #          client5:
 #            http:
 #              wire: debug
+
+tj:
+  ai:
+    dashscope:
+      key: ${ALIYUN_API_KEY}
