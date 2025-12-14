@@ -5,7 +5,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.time.LocalDateTime;
@@ -74,5 +77,46 @@ public class HybridChatMemory implements ChatMemory {
     public void clear(String conversationId) {
         stringRedisTemplate.delete(prefix + conversationId);
         // MongoDB 的数据不删除，作为历史记录保留
+    }
+
+
+    /**
+     * 优化对话记录，删除最后的2条消息（路由智能体的中间转发消息）
+     * 同时清理 Redis 和 MongoDB 中的数据，保证数据一致性
+     *
+     * @param conversationId 对话的唯一标识符
+     */
+    public void optimization(String conversationId) {
+        // 1. 删除 Redis 中的最后2条
+        String redisKey = prefix + conversationId;
+        var listOps = stringRedisTemplate.boundListOps(redisKey);
+        listOps.rightPop(2);
+
+        // 2. 删除 MongoDB 中的最后2条
+        try {
+            // 查询该会话最近的2条消息
+            var query = new Query();
+            query.addCriteria(Criteria.where("sessionId").is(conversationId));
+            query.with(Sort.by(Sort.Direction.DESC, "createTime"));
+            query.limit(2);
+
+            List<ChatMessagePO> lastTwoMessages = mongoTemplate.find(query, ChatMessagePO.class);
+
+            // 批量删除这2条消息
+            if (!lastTwoMessages.isEmpty()) {
+                List<String> idsToDelete = lastTwoMessages.stream()
+                        .map(ChatMessagePO::getId)
+                        .collect(Collectors.toList());
+
+                var deleteQuery = new Query();
+                deleteQuery.addCriteria(Criteria.where("id").in(idsToDelete));
+                mongoTemplate.remove(deleteQuery, ChatMessagePO.class);
+
+                log.debug("MongoDB优化: 删除会话 {} 的最后2条消息，IDs: {}", conversationId, idsToDelete);
+            }
+        } catch (Exception e) {
+            log.error("MongoDB优化失败: conversationId={}, error={}", conversationId, e.getMessage());
+            // 优化失败不应影响主流程
+        }
     }
 }

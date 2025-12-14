@@ -17,4 +17,8 @@ public interface Constant {
         String COURSE_IDS = "课程id列表";
     }
 
+    interface Chats {
+        String CHAT_RESPONSE_METADATA = "metadata";
+    }
+
 }
