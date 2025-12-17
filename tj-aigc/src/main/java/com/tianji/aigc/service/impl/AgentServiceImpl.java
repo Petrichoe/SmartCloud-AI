@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * 路由工作流智能体架构：根据用户意图分析选取需要使用的智能体
  */
-@Service
+//@Service
 @RequiredArgsConstructor
 public class AgentServiceImpl implements ChatService {
 

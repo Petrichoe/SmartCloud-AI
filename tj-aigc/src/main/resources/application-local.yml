@@ -1,8 +1,4 @@
 spring:
-  #ai:
-    #dashscope:
-      #api-key: ${ALIYUN_API_KEY}
-
   cloud:
     nacos:
       server-addr: 192.168.150.101:8848 # nacos注册中心
@@ -21,6 +17,7 @@ spring:
       - nacos:shared-feign.yaml # 共享feign配置
       - nacos:shared-mybatis.yaml # 共享mybatis配置
       - nacos:shared-mongo.yaml
+
 logging:
   level:
     com:
@@ -38,7 +35,4 @@ logging:
 #            http:
 #              wire: debug
 
-tj:
-  ai:
-    dashscope:
-      key: ${ALIYUN_API_KEY}
+

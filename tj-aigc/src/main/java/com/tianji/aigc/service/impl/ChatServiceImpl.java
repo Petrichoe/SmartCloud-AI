@@ -31,7 +31,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 这个是用于增强型智能体架构
+ * 增强型智能体架构
  */
 @Slf4j
 //@Service
