@@ -24,6 +24,7 @@ public class AIProperties {//用来接收自定义的配置，像redis那种spri
         private Chat buyAgent;
         private Chat consultAgent; // 咨询智能体系统提示词
         private Chat knowledgeAgent; // 知识讲解智能体系统提示词
+        private Chat text; // 文本提示语，用于问答回复、润色等文本类型的业务
 
 
         @Data

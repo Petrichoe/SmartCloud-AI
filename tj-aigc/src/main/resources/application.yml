@@ -26,6 +26,7 @@ tj:
   jdbc:
     database: tj_aigc #指定使用的数据库名
   ai:
+    user-id: 9999  #默认id，数据库tj_user中的user表中，有对应的用户数据
     prompt:
       system:
         chat:
@@ -42,3 +43,5 @@ tj:
           data-id: consult-agent-system-message.txt
         knowledge-agent:
           data-id: knowledge-agent-system-message.txt
+        text:
+          data-id: text-system-chat-message.txt

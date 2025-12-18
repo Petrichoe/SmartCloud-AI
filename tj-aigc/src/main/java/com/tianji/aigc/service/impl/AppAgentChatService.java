@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 集成阿里云平台的智能体：使用前要注意内网穿透的配置
  */
-@Service
+//@Service
 @RequiredArgsConstructor
 public class AppAgentChatService implements ChatService {
 
@@ -92,5 +92,10 @@ public class AppAgentChatService implements ChatService {
     public void stop(String sessionId) {
         // 移除标记
         GENERATE_STATUS.remove(sessionId);
+    }
+
+    @Override
+    public String chatText(String question) {
+        return "";
     }
 }
