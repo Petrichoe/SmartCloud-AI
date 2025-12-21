@@ -3,6 +3,7 @@ package com.tianji.aigc.controller;
 
 import com.tianji.aigc.domain.dto.ChatDTO;
 import com.tianji.aigc.domain.vo.ChatEventVO;
+import com.tianji.aigc.domain.vo.ChatSessionVO;
 import com.tianji.aigc.domain.vo.MessageVO;
 import com.tianji.aigc.domain.vo.SessionVO;
 import com.tianji.aigc.service.IChatSessionService;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -46,6 +48,31 @@ public class ChatSessionController {
     @GetMapping("/{sessionId}")
     public List<MessageVO> getSessionDetailById(@PathVariable("sessionId") String sessionId) {
         return chatSessionService.getSessionDetailById(sessionId);
+    }
+
+    /**
+     * 查询历史会话列表
+     */
+    @GetMapping("/history")
+    public Map<String, List<ChatSessionVO>> queryHistorySession() {
+        return this.chatSessionService.queryHistorySession();
+    }
+
+    /**
+     * 删除历史会话列表
+     */
+    @DeleteMapping("/history")
+    public void deleteHistorySession(@RequestParam("sessionId") String sessionId) {
+        this.chatSessionService.deleteHistorySession(sessionId);
+    }
+
+    /**
+     * 更新历史会话标题
+     */
+    @PutMapping("/history")
+    public void updateTitle(@RequestParam("sessionId") String sessionId,
+                            @RequestParam("title") String title) {
+        this.chatSessionService.updateTitle(sessionId, title);
     }
 
 

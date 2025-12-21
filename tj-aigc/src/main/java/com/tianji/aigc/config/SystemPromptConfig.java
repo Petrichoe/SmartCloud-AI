@@ -11,6 +11,9 @@ import org.springframework.context.annotation.Configuration;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * 配置的执行者（真正去把配置取回来并监听变化）。
+ */
 @Slf4j
 @Getter
 @Configuration
@@ -20,13 +23,26 @@ public class SystemPromptConfig {
     private final NacosConfigManager nacosConfigManager;
     private final AIProperties aiProperties;
 
+
     // 使用原子引用，保证线程安全
     private final AtomicReference<String> chatSystemMessage = new AtomicReference<>();
+    private final AtomicReference<String> routeAgentSystemMessage = new AtomicReference<>();
+    private final AtomicReference<String> recommendAgentSystemMessage = new AtomicReference<>();
+    private final AtomicReference<String> buyAgentSystemMessage = new AtomicReference<>();
+    private final AtomicReference<String> consultAgentSystemMessage = new AtomicReference<>();
+    private final AtomicReference<String> knowledgeAgentSystemMessage = new AtomicReference<>();
+    private final AtomicReference<String> textSystemMessage = new AtomicReference<>();
 
     @PostConstruct // 初始化时加载配置
     public void init() {
         // 读取配置文件
         loadConfig(aiProperties.getSystem().getChat(), chatSystemMessage);
+        loadConfig(aiProperties.getSystem().getRouteAgent(), routeAgentSystemMessage);
+        loadConfig(aiProperties.getSystem().getRecommendAgent(), recommendAgentSystemMessage);
+        loadConfig(aiProperties.getSystem().getBuyAgent(), buyAgentSystemMessage);
+        loadConfig(aiProperties.getSystem().getConsultAgent(), consultAgentSystemMessage);
+        loadConfig(aiProperties.getSystem().getKnowledgeAgent(), knowledgeAgentSystemMessage);
+        loadConfig(aiProperties.getSystem().getText(), textSystemMessage);
     }
 
     private void loadConfig(AIProperties.System.Chat chatConfig, AtomicReference<String> target) {

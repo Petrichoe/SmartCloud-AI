@@ -1,5 +1,6 @@
 package com.tianji.aigc.config;
 
+import com.tianji.aigc.advisor.RecordOptimizationAdvisor;
 import com.tianji.aigc.memory.HybridChatMemory;
 import com.tianji.aigc.memory.RedisChatMemory;
 import com.tianji.aigc.tools.CourseTools;
@@ -22,15 +23,34 @@ public class SpringAIConfig {
      * 配置 ChatClient
      */
     @Bean
-    public ChatClient chatClient(ChatClient.Builder chatClientBuilder,
-                                 Advisor loggerAdvisor,
-                                 Advisor messageChatMemoryAdvisor,
-                                 CourseTools courseTools,
-                                 OrderTools orderTools ) {  // 日志记录器
-        return chatClientBuilder
-                .defaultAdvisors(loggerAdvisor, messageChatMemoryAdvisor) //添加 Advisor 功能增强
-                .defaultTools(courseTools, orderTools) //添加默认工具
+    public ChatClient dashScopeChatClient(ChatClient.Builder dashScopeChatClientBuilder,
+                                          Advisor loggerAdvisor,
+                                          Advisor messageChatMemoryAdvisor,
+                                          Advisor recordOptimizationAdvisor, // 记录优化
+                                          CourseTools courseTools, // 课程工具
+                                          OrderTools orderTools // 预下单工具
+    ) {  // 日志记录器
+        return dashScopeChatClientBuilder
+                .defaultAdvisors(loggerAdvisor, messageChatMemoryAdvisor, recordOptimizationAdvisor) //添加 Advisor 功能增强
+                // .defaultTools(courseTools, orderTools) //添加默认工具
                 .build();
+    }
+
+    @Bean
+    public ChatClient openAiChatClient(ChatClient.Builder openAiChatClientBuilder,
+                                       Advisor loggerAdvisor  // 日志记录器
+    ) {
+        return openAiChatClientBuilder
+                .defaultAdvisors(loggerAdvisor)
+                .build();
+    }
+
+    /**
+     * 优化对话历史记录
+     */
+    @Bean
+    public Advisor recordOptimizationAdvisor(HybridChatMemory hybridChatMemory) {
+        return new RecordOptimizationAdvisor(hybridChatMemory);
     }
 
     /**

@@ -9,13 +9,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 技术栈
 
 - **核心框架**: Spring Boot 3.3.5, Spring Cloud 2023.0.3, Spring Cloud Alibaba 2023.0.3.2
-- **数据库**: MySQL 8.0.23, MyBatis Plus 3.5.9
+- **数据库**: MySQL 8.0.23, MyBatis Plus 3.5.9, MongoDB (AIGC 对话存储)
 - **缓存**: Redisson 3.13.6
-- **搜索**: Elasticsearch 7.12.1
+- **搜索**: Elasticsearch 7.12.1 (含向量数据库功能)
 - **消息队列**: Spring AMQP (RabbitMQ)
 - **任务调度**: XXL-Job 2.3.1
 - **文档**: Knife4j 4.5.0 (OpenAPI 3)
 - **工具库**: Hutool 5.8.36
+- **AI 框架**: Spring AI BOM, Spring AI Alibaba 1.0.0-M6.1, 阿里云通义千问 DashScope SDK 2.19.0, OpenAI API
 - **云服务**: 阿里云 OSS、支付宝 SDK、腾讯云 SDK
 
 ## 构建和运行命令
@@ -117,6 +118,7 @@ mvn test -Dtest=YourTestClass#testMethod
 - **tj-data** (ds): 数据服务
 - **tj-remark** (rs): 评论服务
 - **tj-message** (sms): 消息服务
+- **tj-aigc** (ags): AIGC 服务（端口 8094）
 
 部分服务采用 DDD 分层结构（如 tj-message、tj-pay）：
 - `*-domain`: 领域层（实体、值对象）
@@ -155,6 +157,7 @@ mvn test -Dtest=YourTestClass#testMethod
 
 - tj-gateway: 10010
 - tj-course: 8086
+- tj-aigc: 8094
 - 其他服务端口参考各自 application.yml
 
 ### API 文档
@@ -193,6 +196,169 @@ mvn test -Dtest=YourTestClass#testMethod
 
 1. **Java 版本**: 必须使用 Java 17
 2. **编码**: 统一使用 UTF-8
-3. **循环依赖**: course-service 允许循环引用（`allow-circular-references: true`）
+3. **循环依赖**: course-service 和 aigc-service 允许循环引用（`allow-circular-references: true`）
 4. **Git 分支**: 主分支为 `stu`，创建 PR 时应以 `stu` 为目标分支
 5. **容器化**: 使用阿里云镜像仓库（registry.cn-beijing.aliyuncs.com/itcast/openjdk:17-jdk-eclipse-temurin）
+
+## AIGC 服务特别说明
+
+### 服务概览
+
+tj-aigc 是天机学堂的 AI 生成式内容服务，提供智能对话、课程推荐、语音合成等 AI 能力。
+
+### 核心特性
+
+#### 1. 多智能体架构（Multi-Agent System）
+
+采用路由智能体架构，根据用户意图动态分发到不同专业智能体：
+
+- **RouteAgent（路由智能体）**: 负责分析用户意图，将请求路由到合适的专业智能体
+- **RecommendAgent（课程推荐智能体）**: 基于用户需求和 Elasticsearch 向量检索推荐课程
+- **ConsultAgent（课程咨询智能体）**: 解答课程相关问题
+- **BuyAgent（课程购买智能体）**: 处理下单购买流程，集成交易服务
+- **KnowledgeAgent（知识讲解智能体）**: 提供知识点讲解和答疑
+
+智能体类型定义：`com.tianji.aigc.enums.AgentTypeEnum`
+
+#### 2. 混合存储架构（Hybrid Storage）
+
+采用 Redis + MongoDB 混合存储方案优化对话管理：
+
+- **Redis 热数据存储**:
+  - 存储最近 20 轮对话作为 AI 上下文
+  - 提供毫秒级响应速度
+  - 防止 Token 超限（Context Window Exceeded）
+  - 自动过期时间：3 天
+
+- **MongoDB 冷数据存储**:
+  - 持久化全量历史对话记录
+  - 支持前端查询完整聊天历史
+  - 集合：`chat_message`
+  - 索引字段：`sessionId`, `createTime`
+
+核心实现：
+- `HybridChatMemory`: 混合存储实现（实现 Spring AI 的 `ChatMemory` 接口）
+- `RedisChatMemory`: Redis 存储实现
+- 数据模型：`ChatMessagePO`, `ChatSession`
+
+#### 3. 向量检索（Vector Search）
+
+集成 Elasticsearch 作为向量数据库：
+
+- 用于课程内容的语义检索
+- 支持课程推荐智能体的相似度匹配
+- 依赖：`spring-ai-elasticsearch-store-spring-boot-starter`
+- Elasticsearch 版本：8.15.5
+
+#### 4. AI 模型集成
+
+支持多种 AI 模型接入：
+
+- **阿里云通义千问**:
+  - Spring AI Alibaba Starter 1.0.0-M6.1
+  - DashScope SDK 2.19.0
+  - 配置类：`DashScopeProperties`
+
+- **OpenAI API**:
+  - Spring AI OpenAI Starter
+  - 支持 ChatGPT 模型和 TTS（Text-to-Speech）
+  - 实现类：`OpenAIAudioServiceImpl`
+
+配置类：`SpringAIConfig`, `AIProperties`
+
+#### 5. 流式响应（Server-Sent Events）
+
+- 支持 SSE 流式输出，实现打字机效果
+- 接口：`POST /chat` (produces = `text/event-stream`)
+- 返回类型：`Flux<ChatEventVO>` (响应式编程)
+- 事件类型：`ChatEventTypeEnum` (消息内容、工具调用、结束标记等)
+
+#### 6. 文字转语音（TTS）
+
+- 提供流式 TTS 接口
+- 接口：`POST /audio/tts-stream` (produces = `audio/mp3`)
+- 返回类型：`ResponseBodyEmitter`
+- 实现：基于 OpenAI TTS API
+
+### 系统提示词管理
+
+系统提示词（System Prompt）通过 Nacos 配置中心动态管理：
+
+```yaml
+tj:
+  ai:
+    prompt:
+      system:
+        route-agent:
+          data-id: route-agent-system-message.txt
+        recommend-agent:
+          data-id: recommend-agent-system-message.txt
+        buy-agent:
+          data-id: buy-agent-system-message.txt
+        consult-agent:
+          data-id: consult-agent-system-message.txt
+        knowledge-agent:
+          data-id: knowledge-agent-system-message.txt
+```
+
+配置类：`SystemPromptConfig`
+
+### 工具调用（Function Calling）
+
+智能体可调用外部工具增强能力：
+
+- **CourseTools**: 课程查询工具（集成 Elasticsearch 向量检索）
+- **OrderTools**: 下单工具（集成 TradeClient）
+- 工具结果存储：`ToolResultHolder`
+
+### 主要接口
+
+- **对话接口**: `POST /chat` - SSE 流式对话
+- **停止对话**: `POST /chat/stop` - 中断当前会话
+- **文本对话**: `POST /chat/text` - 非流式对话
+- **会话管理**: `GET /sessions` - 查询会话列表
+- **会话详情**: `GET /sessions/{id}` - 查询历史消息
+- **语音合成**: `POST /audio/tts-stream` - 文字转语音流式输出
+- **向量化**: 嵌入相关接口（`EmbeddingController`）
+
+### 数据库
+
+- **MySQL 数据库**: `tj_aigc`
+  - 表：`chat_session` (会话元数据)
+  - Mapper: `ChatSessionMapper`
+
+- **MongoDB 集合**: `chat_message`
+  - 文档结构：sessionId, type, content, createTime
+
+### 关键配置
+
+```yaml
+server:
+  port: 8094
+
+spring:
+  application:
+    name: aigc-service
+
+tj:
+  jdbc:
+    database: tj_aigc
+  ai:
+    user-id: 9999  # 默认用户 ID
+  auth:
+    resource:
+      enable: true
+```
+
+### 开发注意事项
+
+1. **异步处理**: MongoDB 写入建议使用异步方式，避免阻塞流式响应
+2. **Token 管理**: Redis 中的对话数量限制为 20 条，防止超出模型 Token 限制
+3. **索引优化**: MongoDB 的 `sessionId` 和 `createTime` 字段必须建立索引
+4. **配置中心**: 系统提示词存储在 Nacos，修改后需重启服务生效
+5. **循环依赖**: 该服务允许循环引用（`allow-circular-references: true`）
+6. **响应式编程**: 大量使用 Reactor（Flux/Mono），需熟悉响应式编程模型
+
+### 相关文档
+
+详细的对话存储改造方案参见：`tj-aigc/src/main/resources/doc/README_CHAT_REFACTOR.md`

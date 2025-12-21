@@ -12,6 +12,7 @@ import com.tianji.aigc.constants.Constant;
 import com.tianji.aigc.enums.ChatEventTypeEnum;
 import com.tianji.aigc.domain.vo.ChatEventVO;
 import com.tianji.aigc.service.ChatService;
+import com.tianji.aigc.service.IChatSessionService;
 import com.tianji.common.utils.UserContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,17 +30,25 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * 增强型智能体架构
+ */
 @Slf4j
-@Service
+//@Service
 @RequiredArgsConstructor
 public class ChatServiceImpl implements ChatService {
 
-    private final ChatClient chatClient;
+    private final ChatClient dashScopeChatClient;
+
     private final SystemPromptConfig systemPromptConfig;
 
     private final ChatMemory chatMemory;
 
     private final VectorStore vectorStore;
+
+    private final IChatSessionService chatSessionService;
+
+    private final ChatClient openAiChatClient;
 
     // 存储大模型的生成状态，这里采用ConcurrentHashMap是确保线程安全
     // 目前的版本暂时用Map实现，如果考虑分布式环境的话，可以考虑用redis来实现
@@ -62,7 +71,10 @@ public class ChatServiceImpl implements ChatService {
         // 获取用户id
         var userId = UserContext.getUser();
 
-        return this.chatClient.prompt()
+        //更新会话时间
+        this.chatSessionService.update(sessionId, question, userId);
+
+        return this.dashScopeChatClient.prompt()
                 .system(promptSystem -> promptSystem
                         .text(this.systemPromptConfig.getChatSystemMessage().get()) // 设置系统提示语
                         .param("now", DateUtil.now()) // 设置当前时间的参数
@@ -132,6 +144,13 @@ public class ChatServiceImpl implements ChatService {
     public void stop(String sessionId) {
         // 移除标记
         GENERATE_STATUS.remove(sessionId);
+    }
+
+    @Override
+    public String chatText(String question) {
+        return openAiChatClient.prompt()
+                .system(promptSystemSpec -> promptSystemSpec.text(this.systemPromptConfig.getTextSystemMessage().get()))
+                .user(question).call().content();
     }
 
     /**
