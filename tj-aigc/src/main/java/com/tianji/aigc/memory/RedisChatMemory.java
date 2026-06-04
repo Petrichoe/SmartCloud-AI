@@ -10,6 +10,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.List;
 
+
+//现在不用这个了，而是用HybridChatMemory
 public class RedisChatMemory implements ChatMemory {
 
     // 默认redis中key的前缀

@@ -24,7 +24,7 @@ public class LearningRecordController {
 
     @Operation(summary = "查询指定课程的学习记录")
     @GetMapping("/course/{courseId}")
-    public LearningLessonDTO queryLearningRecordByCourse(
+    public LearningLessonDTO queryLearningRecordByCourse( //@Parameter 描述接口参数
             @Parameter(description = "课程id", example = "2") @PathVariable("courseId") Long courseId) {
         return recordService.queryLearningRecordByCourse(courseId);
     }

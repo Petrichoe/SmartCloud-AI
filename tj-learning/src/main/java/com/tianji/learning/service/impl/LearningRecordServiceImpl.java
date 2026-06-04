@@ -110,7 +110,7 @@ public class LearningRecordServiceImpl extends ServiceImpl<LearningRecordMapper,
     private boolean handleVideoRecord(Long userId, LearningRecordFormDTO recordDTO) {
         // 1.查询旧的学习记录
         LearningRecord old = queryOldRecord(recordDTO.getLessonId(), recordDTO.getSectionId());
-        // 2.判断是否存在
+        // 2.判断是否存在:新增的这条记录不存在时会先写入数据库
         if (old == null) {
             // 3.不存在，则新增
             // 3.1.转换PO

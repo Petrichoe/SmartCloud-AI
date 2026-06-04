@@ -20,7 +20,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 public class SpringAIConfig {
 
     /**
-     * 配置 ChatClient
+     * 配置 ChatClient：这里的配置 它在整个 Spring Boot 项目启动时只会执行一次。
      */
     @Bean
     public ChatClient dashScopeChatClient(ChatClient.Builder dashScopeChatClientBuilder,
@@ -77,9 +77,10 @@ public class SpringAIConfig {
 
     /**
      * 基于Redis的会话记忆，聊天记忆整合到system message中实现多轮对话
+     * MessageChatMemoryAdvisor 负责“什么时候存、什么时候取”
      */
     @Bean
-    public Advisor messageChatMemoryAdvisor(ChatMemory chatMemory) {
+    public Advisor messageChatMemoryAdvisor(ChatMemory chatMemory) { //由上面那个chatMemory注入的
         return new MessageChatMemoryAdvisor(chatMemory);
     }
 }

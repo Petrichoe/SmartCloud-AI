@@ -27,7 +27,7 @@ public class MybatisConfig {
     }
 
     @Bean
-    // @ConditionalOnMissingBean
+    // @ConditionalOnMissingBean                         //required = false:有DynamicTableNameInnerInterceptor的Bean就注入没有就算了，不会报错
     public MybatisPlusInterceptor mybatisPlusInterceptor(@Autowired(required = false) DynamicTableNameInnerInterceptor innerInterceptor) {
         // 1.定义插件主体，注意顺序：表名 > 多租户 > 分页 > 乐观锁 > 字段填充
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();

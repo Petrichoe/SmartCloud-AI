@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "tj.ai.prompt")
-public class AIProperties {//用来接收自定义的配置，像redis那种spring已经帮我们定义好了
+public class AIProperties {//用来接收自定义的配置，像redis那种spring已经帮我们定义好了 :用于作为外部文件与Java代码交互的桥梁
 
     private System system; // 系统提示语，用于课程推荐、购买业务
 

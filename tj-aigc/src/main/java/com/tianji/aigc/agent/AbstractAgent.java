@@ -47,7 +47,7 @@ public abstract class AbstractAgent implements Agent { //使用抽象类可以�
         var userId = UserContext.getUser();
         var requestId = this.generateRequestId();
 
-        //更新会话时间
+        //更新MYSQL中会话时间
         this.chatSessionService.update(sessionId, question, userId);
 
         return this.getChatClientRequest(sessionId, requestId, question)
@@ -124,7 +124,7 @@ public abstract class AbstractAgent implements Agent { //使用抽象类可以�
                     return Flux.just(STOP_EVENT);
                 }));
     }
-
+    //这里的配置，每次用户发起请求都会执行一次
     private ChatClient.ChatClientRequestSpec getChatClientRequest(String sessionId, String requestId, String question) {
         return this.dashScopeChatClient.prompt()
                 .system(promptSystem -> promptSystem.text(this.systemMessage()).params(this.systemMessageParams()))

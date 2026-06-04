@@ -16,7 +16,7 @@ import java.net.UnknownHostException;
 @EnableAsync
 @EnableScheduling
 @SpringBootApplication
-@MapperScan("com.tianji.learning.mapper")
+@MapperScan("com.tianji.learning.mapper") //帮忙省去一个一个写@mapper的麻烦
 public class LearningApplication {
     public static void main(String[] args) throws UnknownHostException {
         SpringApplication app = new SpringApplicationBuilder(LearningApplication.class).build(args);

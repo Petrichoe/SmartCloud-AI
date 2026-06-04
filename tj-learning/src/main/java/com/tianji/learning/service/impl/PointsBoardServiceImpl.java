@@ -42,6 +42,7 @@ public class PointsBoardServiceImpl extends ServiceImpl<PointsBoardMapper, Point
 
     private final UserClient userClient;
 
+
     @Override
     public PointsBoardVO queryPointsBoardBySeason(PointsBoardQuery query) {
         // 1.判断是否是查询当前赛季
@@ -50,7 +51,7 @@ public class PointsBoardServiceImpl extends ServiceImpl<PointsBoardMapper, Point
         // 2.获取Redis的Key
         LocalDateTime now = LocalDateTime.now();
         String key = RedisConstants.POINTS_BOARD_KEY_PREFIX + now.format(DateUtils.POINTS_BOARD_SUFFIX_FORMATTER);
-        // 2.查询我的积分和排名
+        // 2.查询我的积分和排名:如果是当前榜单的走queryMyCurrentBoard(key),否则走queryMyHistoryBoard(season)
         PointsBoard myBoard = isCurrent ?
                 queryMyCurrentBoard(key) : // 查询当前榜单（Redis）
                 queryMyHistoryBoard(season); // 查询历史榜单（MySQL）
@@ -106,6 +107,14 @@ public class PointsBoardServiceImpl extends ServiceImpl<PointsBoardMapper, Point
         records.forEach(b -> b.setRank(b.getId().intValue()));
         return records;
     }
+
+    /**
+     * 查询当前赛季榜单
+     * @param key
+     * @param pageNo
+     * @param pageSize
+     * @return
+     */
 
     @Override
     public List<PointsBoard> queryCurrentBoardList(String key, Integer pageNo, Integer pageSize) {

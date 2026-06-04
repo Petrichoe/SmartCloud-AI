@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 @ConditionalOnClass(XxlJobSpringExecutor.class)
-@EnableConfigurationProperties(XxlJobProperties.class)
+@EnableConfigurationProperties(XxlJobProperties.class)//按需将配置文件中的参数映射到 Java 实体类中，并把它作为一个 Bean 交给 Spring 容器管理
 public class XxlJobConfig {
 
     @Bean

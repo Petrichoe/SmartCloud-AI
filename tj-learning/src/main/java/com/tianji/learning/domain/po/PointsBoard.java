@@ -17,10 +17,10 @@ import java.io.Serializable;
  *
  * @author 虎哥
  */
-@Data
+@Data //不需要写get,set
 @EqualsAndHashCode(callSuper = false)
-@Accessors(chain = true)
-@TableName("points_board")
+@Accessors(chain = true) //支持链式调用如：PointsBoard board new PointsBoard().setUserId(1L).setPoints(100).setRank(1);
+@TableName("points_board") //指定数据库表名
 public class PointsBoard implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -28,7 +28,7 @@ public class PointsBoard implements Serializable {
     /**
      * 榜单id
      */
-    @TableId(value = "id", type = IdType.INPUT)
+    @TableId(value = "id", type = IdType.INPUT)//指定主键字段
     private Long id;
 
     /**
@@ -44,7 +44,7 @@ public class PointsBoard implements Serializable {
     /**
      * 名次，只记录赛季前100
      */
-    @TableField(exist = false)
+    @TableField(exist = false)//标记为非数据库字段
     private Integer rank;
 
     /**

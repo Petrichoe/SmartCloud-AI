@@ -42,7 +42,7 @@ public class PointsBoardPersistentHandler {
         pointsBoardService.createPointsBoardTableBySeason(season);
     }
 
-    @XxlJob("savePointsBoard2DB")
+    @XxlJob("savePointsBoard2DB")//注解中定义的就是当前任务的名称
     public void savePointsBoard2DB(){
         // 1.获取上月时间
         LocalDateTime time = LocalDateTime.now().minusMonths(1);
@@ -57,9 +57,9 @@ public class PointsBoardPersistentHandler {
         // 3.1.拼接KEY
         String key = RedisConstants.POINTS_BOARD_KEY_PREFIX + time.format(DateUtils.POINTS_BOARD_SUFFIX_FORMATTER);
         // 3.2.查询数据
-        int index = XxlJobHelper.getShardIndex();
-        int total = XxlJobHelper.getShardTotal();
-        int pageNo = index + 1;
+        int index = XxlJobHelper.getShardIndex();//执行器编号
+        int total = XxlJobHelper.getShardTotal();//执行器数量
+        int pageNo = index + 1;//起始页码
         int pageSize = 10;
         while (true) {
             List<PointsBoard> boardList = pointsBoardService.queryCurrentBoardList(key, pageNo, pageSize);

@@ -47,8 +47,8 @@ import java.util.stream.Collectors;
  * @since 2022-12-02
  */
 @SuppressWarnings("ALL")
-@Service
-@RequiredArgsConstructor
+@Service //告诉 Spring：这是一个业务层 Bean，需要交给 Spring 容器管理
+@RequiredArgsConstructor //构造函数注入
 @Slf4j
 public class LearningLessonServiceImpl extends ServiceImpl<LearningLessonMapper, LearningLesson> implements ILearningLessonService {
 

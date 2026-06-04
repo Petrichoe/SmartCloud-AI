@@ -4,7 +4,7 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
-@ConfigurationProperties(prefix = "tj.xxl-job")
+@ConfigurationProperties(prefix = "tj.xxl-job")//请你去 Nacos 以及本地的 application.yml 里面找一找，只把以 tj.xxl-job 开头的配置项给我拿过来
 public class XxlJobProperties {
 
     private String accessToken;
