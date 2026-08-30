@@ -25,7 +25,7 @@ public interface ChatService {
      * @return 对话id
      */
     static String getConversationId(String sessionId) {
-        return null;
+        return UserContext.getUser() + "_" + sessionId;
     }
 
     String chatText(String question);

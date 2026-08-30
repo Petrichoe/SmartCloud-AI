@@ -112,6 +112,15 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
         return PageDTO.of(page, list);
     }
 
+    /**
+     * 如果立即发放：
+     * coupon 表状态变成 ISSUING
+     * Redis 里出现 prs:coupon:{id}
+     *
+     * 如果预约发放：
+     * coupon 表状态变成 UN_ISSUE
+     * 暂时不写 Redis，等定时任务到点再写
+     */
     @Transactional
     @Override
     public void beginIssue(CouponIssueFormDTO dto) {
@@ -141,7 +150,7 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
         // 4.3.写入数据库
         updateById(c);
 
-        // 5.添加缓存
+        // 5.如果是立即发放，添加缓存
         if (isBegin) {
             coupon.setIssueBeginTime(c.getIssueBeginTime());
             coupon.setIssueEndTime(c.getIssueEndTime());

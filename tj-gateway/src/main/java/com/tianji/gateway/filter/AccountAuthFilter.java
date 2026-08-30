@@ -29,18 +29,21 @@ public class AccountAuthFilter implements GlobalFilter, Ordered {
         this.authProperties = authProperties;
     }
 
-    @Override
+
+    @Override//因为你的类实现了 GlobalFilter（全局过滤器），网关在处理每一个进入系统的 HTTP 请求时，都会把这两个对象传给 filter 方法。
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         // 1.获取请求request信息
         ServerHttpRequest request = exchange.getRequest();
         // String method = request.getMethodValue();
+
+        //构建 antPath，格式如 "POST:/accounts/login"
         String method = request.getMethod().name();
         String path = request.getPath().toString();
         String antPath = method + ":" + path;
 
         // 2.判断是否是无需登录的路径
         if(isExcludePath(antPath)){
-            // 直接放行
+            // 直接放行:不需要token
             return chain.filter(exchange);
         }
 

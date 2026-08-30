@@ -163,6 +163,7 @@ public class SearchServiceImpl implements ISearchService {
         return courses;
     }
 
+
     @Override
     public PageDTO<CourseVO> queryCoursesForPortal(CoursePageQuery query) {
         // 1.搜索数据

@@ -106,14 +106,14 @@ public class UserCouponServiceImpl extends ServiceImpl<UserCouponMapper, UserCou
         String key1 = PromotionConstants.COUPON_CACHE_KEY_PREFIX + couponId;
         String key2 = PromotionConstants.USER_COUPON_CACHE_KEY_PREFIX + couponId;
         Long userId = UserContext.getUser();
-        // 1.2.执行脚本
+        // 1.2.执行脚本 进行原子校验和预扣库存
         Long r = redisTemplate.execute(RECEIVE_COUPON_SCRIPT, List.of(key1, key2), userId.toString());
         int result = NumberUtils.null2Zero(r).intValue();
         if (result != 0) {
             // 结果大于0，说明出现异常
             throw new BizIllegalException(PromotionConstants.RECEIVE_COUPON_ERROR_MSG[result - 1]);
         }
-        // 2.发送MQ消息
+        // 2.发送MQ消息 此时才真正去写入数据库
         UserCouponDTO uc = new UserCouponDTO();
         uc.setUserId(userId);
         uc.setCouponId(couponId);
@@ -132,6 +132,10 @@ public class UserCouponServiceImpl extends ServiceImpl<UserCouponMapper, UserCou
         return BeanUtils.mapToBean(objMap, Coupon.class, false, CopyOptions.create());
     }
 
+    /**
+     * 用于对消息队列传来的数据存入到MYSQL中
+     * @param uc
+     */
     @Transactional
     @Override
     public void checkAndCreateUserCoupon(UserCouponDTO uc) {

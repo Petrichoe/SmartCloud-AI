@@ -36,6 +36,9 @@ import static com.tianji.common.constants.MqConstants.Exchange.TRADE_DELAY_EXCHA
 import static com.tianji.common.constants.MqConstants.Key.ORDER_DELAY_KEY;
 import static com.tianji.trade.constants.TradeErrorInfo.ORDER_NOT_EXISTS;
 
+import com.tianji.pay.sdk.dto.PayResultDTO;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -77,7 +80,21 @@ public class PayServiceImpl implements IPayService {
             // 订单已经超时，无法支付
             throw new BizIllegalException(TradeErrorInfo.ORDER_OVER_TIME);
         }
-        // 4.查询订单详情
+
+        //测试环境
+        // ==== 直接模拟支付成功，跳过支付宝/微信 ====
+        PayResultDTO mockResult = PayResultDTO.builder()
+                .bizOrderId(orderId)
+                .payOrderNo(IdWorker.getId())          // 模拟支付单号
+                .payChannel("mock")
+                .successTime(LocalDateTime.now())
+                .status(1)                               // 1 = 成功
+                .build();
+        orderService.handlePaySuccess(mockResult);
+        return "mock_success";
+
+        //实际业务逻辑
+        /*// 4.查询订单详情
         List<OrderDetail> details = detailService.queryByOrderId(orderId);
         AssertUtils.isNotEmpty(details, ORDER_NOT_EXISTS);
 
@@ -93,7 +110,7 @@ public class PayServiceImpl implements IPayService {
         String url = payClient.applyPayOrder(payApplyDTO);
         // 6.通过延迟队列，异步查询支付结果
         sendDelayQueryMessage(OrderDelayQueryDTO.init(orderId));
-        return url;
+        return url;*/
     }
 
     private void sendDelayQueryMessage(OrderDelayQueryDTO message) {

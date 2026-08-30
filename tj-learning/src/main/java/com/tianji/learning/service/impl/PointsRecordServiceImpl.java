@@ -62,7 +62,7 @@ public class PointsRecordServiceImpl extends ServiceImpl<PointsRecordMapper, Poi
         save(p);
         // 4.更新总积分到Redis
         String key = RedisConstants.POINTS_BOARD_KEY_PREFIX + now.format(DateUtils.POINTS_BOARD_SUFFIX_FORMATTER);
-        redisTemplate.opsForZSet().incrementScore(key, userId.toString(), realPoints);
+        redisTemplate.opsForZSet().incrementScore(key, userId.toString(), realPoints);//将积分累加到 Redis ZSet: boards:yyyyMM
     }
 
     @Override
