@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+This file provides guidance to AI coding agents (ZCode, Codex, etc.) when working with code in this repository.
 
 ## 项目概述
 
@@ -359,6 +359,11 @@ tj:
 5. **循环依赖**: 该服务允许循环引用（`allow-circular-references: true`）
 6. **响应式编程**: 大量使用 Reactor（Flux/Mono），需熟悉响应式编程模型
 
-### 相关文档
+## 相关文档
 
-详细的对话存储改造方案参见：`tj-aigc/src/main/resources/doc/README_CHAT_REFACTOR.md`
+修改以下敏感区域前，先阅读对应设计文档：
+
+- AIGC 对话存储改造方案：`tj-aigc/src/main/resources/doc/README_CHAT_REFACTOR.md`
+- 优惠券异步领券方案：`tj-promotion/src/main/resources/doc/COUPON_ASYNC_RECEIVE.md`
+- 优惠券 Lua 脚本优化：`tj-promotion/src/main/resources/doc/COUPON_LUA_OPTIMIZATION.md`
+- 兑换码安全重构：`tj-promotion/src/main/resources/doc/exchange-code-security-refactoring.md`

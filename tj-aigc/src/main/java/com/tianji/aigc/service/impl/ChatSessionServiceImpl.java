@@ -78,12 +78,13 @@ public class ChatSessionServiceImpl extends ServiceImpl<ChatSessionMapper, ChatS
         // 随机生成sessionId
         sessionVO.setSessionId(IdUtil.fastSimpleUUID());
 
-        //持久化到数据库
-        ChatSession chatSession=ChatSession.builder()
-                .sessionId(sessionVO.getSessionId())
-                .userId(UserContext.getUser())
-                .build();
-        super.save(chatSession);
+         //持久化到数据库
+         ChatSession chatSession=ChatSession.builder()
+                 .sessionId(sessionVO.getSessionId())
+                 .userId(UserContext.getUser())
+                 .title("新对话")
+                 .build();
+         super.save(chatSession);
 
         return sessionVO;
     }
@@ -105,15 +106,19 @@ public class ChatSessionServiceImpl extends ServiceImpl<ChatSessionMapper, ChatS
         Query query = Query.query(Criteria.where("sessionId").is(conversationId))
                 .with(Sort.by(Sort.Order.asc("createTime"))); // 按时间正序
 
-        List<ChatMessagePO> historyList = mongoTemplate.find(query, ChatMessagePO.class);
-        log.info("从 MongoDB 查询到 {} 条历史记录", historyList.size());
+         List<ChatMessagePO> historyList = mongoTemplate.find(query, ChatMessagePO.class);
+         log.info("从 MongoDB 查询到 {} 条历史记录", historyList.size());
 
-        return historyList.stream()
-                .map(po -> MessageVO.builder()
-                        .type(MessageTypeEnum.valueOf(po.getType().toUpperCase()))
-                        .content(po.getContent())
-                        .build())
-                .toList();
+         return historyList.stream()
+                 .filter(po -> {
+                     String type = po.getType();
+                     return "user".equals(type) || "assistant".equals(type);
+                 })
+                 .map(po -> MessageVO.builder()
+                         .type(MessageTypeEnum.valueOf(po.getType().toUpperCase()))
+                         .content(po.getContent())
+                         .build())
+                 .toList();
         // --- 改造结束 ---
 
         /*// 从Redis中获取历史消息
@@ -152,10 +157,10 @@ public class ChatSessionServiceImpl extends ServiceImpl<ChatSessionMapper, ChatS
 
         // 获取列表中的第一个聊天会话实例
         ChatSession chatSession = list.get(0);
-        // 如果聊天会话的标题为空，并且新标题不为空，则更新标题
-        if (StrUtil.isEmpty(chatSession.getTitle()) && !StrUtil.isEmpty(title)) {
-            chatSession.setTitle(StrUtil.sub(title, 0, 100));
-        }
+         // 如果聊天会话的标题为空，并且新标题不为空，则更新标题
+         if (!StrUtil.isEmpty(title) && (StrUtil.isEmpty(chatSession.getTitle()) || "新对话".equals(chatSession.getTitle()))) {
+             chatSession.setTitle(StrUtil.sub(title, 0, 100));
+         }
         // 设置更新字段为updateTime为当前时间
         chatSession.setUpdateTime(LocalDateTimeUtil.now());
         // 更新数据库中的聊天会话信息

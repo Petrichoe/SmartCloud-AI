@@ -73,7 +73,7 @@ public class DiscountServiceImpl implements IDiscountService {
         for (List<Coupon> solution : solutions) {
             // 4.2.异步计算
             CompletableFuture
-                    .supplyAsync(
+                    .supplyAsync(//提交一个异步任务
                             () -> calculateSolutionDiscount(availableCouponMap, orderCourses, solution),
                             discountSolutionExecutor
                     ).thenAccept(dto -> {
@@ -105,6 +105,7 @@ public class DiscountServiceImpl implements IDiscountService {
         if (CollUtils.isEmpty(availableCouponMap)) {
             return null;
         }
+
         // 3.查询优惠券规则
         return calculateSolutionDiscount(availableCouponMap, orderCouponDTO.getCourseList(), coupons);
     }

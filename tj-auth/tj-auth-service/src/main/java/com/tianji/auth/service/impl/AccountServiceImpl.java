@@ -33,7 +33,7 @@ public class AccountServiceImpl implements IAccountService{
     @Override
     public String login(LoginFormDTO loginDTO, boolean isStaff) {
         // 1.查询并校验用户信息
-        LoginUserDTO detail = userClient.queryUserDetail(loginDTO, isStaff);
+        LoginUserDTO detail = userClient.queryUserDetail(loginDTO, isStaff);//看是用户名登录，密码登录...
         if (detail == null) {
             throw new BadRequestException("登录信息有误");
         }
@@ -41,11 +41,13 @@ public class AccountServiceImpl implements IAccountService{
         // 2.基于JWT生成登录token
         // 2.1.设置记住我标记
         detail.setRememberMe(loginDTO.getRememberMe());
-        // 2.2.生成token
+
+        // 2.2.基于 JWT 生成 token
         String token = generateToken(detail);
 
         // 3.计入登录信息表
         loginRecordService.loginSuccess(loginDTO.getCellPhone(), detail.getUserId());
+
         // 4.返回结果
         return token;
     }

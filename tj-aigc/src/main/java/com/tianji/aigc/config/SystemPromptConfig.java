@@ -23,7 +23,7 @@ public class SystemPromptConfig {
     private final NacosConfigManager nacosConfigManager;
     private final AIProperties aiProperties;
 
-
+    //监听器回调在 Nacos 的线程里写，Web 请求线程在读，普通字段没有可见性保证，可能永远读到旧值；AtomicReference 保证写操作对后续读立即可见。
     // 使用原子引用，保证线程安全
     private final AtomicReference<String> chatSystemMessage = new AtomicReference<>();
     private final AtomicReference<String> routeAgentSystemMessage = new AtomicReference<>();

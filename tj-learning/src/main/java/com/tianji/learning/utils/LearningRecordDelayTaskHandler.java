@@ -35,7 +35,7 @@ public class LearningRecordDelayTaskHandler {
 
     @PostConstruct
     public void init(){
-        CompletableFuture.runAsync(this::handleDelayTask);
+        CompletableFuture.runAsync(this::handleDelayTask);//启动一个守护线程（ForkJoinPool 的公共线程池），去跑死循环。
     }
     @PreDestroy
     public void destroy(){
@@ -47,7 +47,7 @@ public class LearningRecordDelayTaskHandler {
         while (begin) {
             try {
                 // 1.获取到期的延迟任务
-                DelayTask<RecordTaskData> task = queue.take();
+                DelayTask<RecordTaskData> task = queue.take(); // ← 阻塞：没有任务就等
                 RecordTaskData data = task.getData();
                 // 2.查询Redis缓存
                 LearningRecord record = readRecordCache(data.getLessonId(), data.getSectionId());

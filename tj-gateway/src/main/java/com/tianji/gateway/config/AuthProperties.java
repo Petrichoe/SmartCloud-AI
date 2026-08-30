@@ -15,12 +15,12 @@ public class AuthProperties implements InitializingBean {
     private Set<String> excludePath;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() throws Exception {//用于说明哪些路径放行
         // 添加默认不拦截的路径
         excludePath.add("/error/**");
         excludePath.add("/jwks");
-        excludePath.add("/accounts/login");
-        excludePath.add("/accounts/admin/login");
-        excludePath.add("/accounts/refresh");
+        excludePath.add("/accounts/login");// 普通用户登录
+        excludePath.add("/accounts/admin/login");// 管理端登录
+        excludePath.add("/accounts/refresh"); // 刷新 token
     }
 }
