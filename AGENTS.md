@@ -1,27 +1,21 @@
 # AGENTS.md
 
-This file provides guidance to AI coding agents (ZCode, Codex, etc.) when working with code in this repository.
+> This file provides guidance to AI coding agents (ZCode, Codex, etc.) when working with code in this repository.
 
-## 项目概述
+## 项目速览
 
-天机学堂(TJXT)是一个基于 Spring Cloud 的微服务架构在线教育平台，使用 Java 17 和 Spring Boot 3.3.5 开发。
+天机学堂（TJXT）是基于 Spring Cloud 的微服务在线教育平台，使用 Java 17 和 Spring Boot 3.3.5。
 
-## 技术栈
+- **基础模块**：`tj-common`、`tj-api`、`tj-gateway`
+- **认证授权**：`tj-auth`（认证服务、资源服务 SDK、网关 SDK）
+- **业务服务**：用户、课程、学习、考试、交易、支付、营销、搜索、媒体、数据、评论、消息、AIGC
+- **服务通信**：Feign 用于同步调用，RabbitMQ 用于异步消息，外部请求统一经过网关
+- **详细说明**：见 [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md)
+- **模块文档**：见 [`docs/README.md`](docs/README.md)
 
-- **核心框架**: Spring Boot 3.3.5, Spring Cloud 2023.0.3, Spring Cloud Alibaba 2023.0.3.2
-- **数据库**: MySQL 8.0.23, MyBatis Plus 3.5.9, MongoDB (AIGC 对话存储)
-- **缓存**: Redisson 3.13.6
-- **搜索**: Elasticsearch 7.12.1 (含向量数据库功能)
-- **消息队列**: Spring AMQP (RabbitMQ)
-- **任务调度**: XXL-Job 2.3.1
-- **文档**: Knife4j 4.5.0 (OpenAPI 3)
-- **工具库**: Hutool 5.8.36
-- **AI 框架**: Spring AI BOM, Spring AI Alibaba 1.0.0-M6.1, 阿里云通义千问 DashScope SDK 2.19.0, OpenAI API
-- **云服务**: 阿里云 OSS、支付宝 SDK、腾讯云 SDK
+## 构建和运行
 
-## 构建和运行命令
-
-### 本地开发
+**本地开发**
 
 ```bash
 # 编译整个项目
@@ -45,325 +39,87 @@ mvn test -Dtest=YourTestClass
 mvn test -Dtest=YourTestClass#testMethod
 ```
 
-### Docker 部署
+## 前端项目（tj-portal-src）
 
-项目包含 startup.sh 脚本用于 Docker 部署：
+前端用户端代码不在本仓库目录内，位于：
+
+`D:\computer technology\code\Project-me\tianji\tj-portal-src`
+
+涉及用户端页面、组件、路由、Pinia 状态、API 请求、Vite 配置、前端构建或联调时，先到上述目录阅读相关代码。前端项目使用 Vue 3 + Vite，启动命令以该目录下的 `package.json` 为准。
+
+**本地启动（Windows PowerShell）**
+
+```powershell
+cd "D:\computer technology\code\Project-me\tianji\tj-portal-src"
+
+# 首次启动或依赖变更后安装依赖
+npm install
+
+# 本地开发，默认监听 0.0.0.0:18082，并自动打开浏览器
+npm run dev
+```
+
+也可以在本仓库根目录双击或执行 `start-frontend.bat` 一键启动前端。该脚本会打开可见的命令行窗口，自动检查并安装前端依赖，然后执行 `npm run dev`；按 `Ctrl+C` 或关闭该窗口即可停止前端。
+
+启动后访问 `http://localhost:18082`。当前 `vite.config.js` 中的代理目标为：
+
+- `/api` -> `http://api.tianji.com`
+- `/img-tx` -> `http://www.tianji.com`
+- `/mock/3359` -> `http://172.17.0.137:8321/mock/3359`
+
+其他常用脚本：
+
+```powershell
+# mock 模式（package.json 的实际定义）
+npm run start
+
+# 测试、产品模式启动
+npm run dev:test
+npm run pro
+
+# 构建和预览
+npm run build
+npm run build:test
+npm run preview
+```
+
+注意：前端 README 中把 `dev` 和 `start` 的 mock/测试说明写反了；以 `package.json` 为准，其中 `npm run dev` 是 `development` 模式，`npm run start` 是 `mock` 模式。`vite.config.js` 当前没有启用 `loadEnv`，代理地址是固定配置，`--mode` 不会自动切换后端地址。README 记录的初始开发环境为 Node.js `v17.8.0`、npm `8.5.5` 或 pnpm `6.32.8`。
+
+**Docker 部署**
+
+项目包含 `startup.sh` 脚本用于 Docker 部署：
 
 ```bash
-# 使用示例（通常在 CI/CD 环境）
 ./startup.sh -c container_name -n project_name -d project_path -p port -o "java_opts" -a debug_port
 ```
 
-参数说明：
-- `-c`: 容器名称
-- `-n`: 项目名称（jar 文件名）
-- `-d`: 项目路径（相对于 /usr/local/src/tianji/tjxt）
-- `-p`: 应用端口
-- `-o`: JVM 参数（可选）
-- `-a`: 调试端口（0 表示普通模式）
-
-## 项目架构
-
-### 模块结构
-
-项目采用多模块 Maven 结构，分为以下主要模块：
-
-#### 1. 基础模块
-
-- **tj-common**: 公共模块，包含：
-  - `annotations`: 自定义注解
-  - `autoconfigure`: 自动配置类
-  - `constants`: 常量定义
-  - `domain`: 通用领域对象（如分页、响应包装类）
-  - `enums`: 枚举类
-  - `exceptions`: 异常处理
-  - `filters`: 过滤器
-  - `utils`: 工具类
-  - `validate`: 校验相关
-
-- **tj-api**: API 接口模块，包含：
-  - `client`: 各服务的 Feign 客户端（跨服务调用）
-  - `dto`: 数据传输对象
-  - `constants`: API 常量
-  - `cache`: 缓存相关
-  使用 Spring Cloud OpenFeign 实现服务间调用，集成 Sentinel 做熔断降级
-
-- **tj-gateway**: 网关服务（端口 10010）
-  - 使用 Spring Cloud Gateway
-  - 路由配置：各服务通过路径前缀区分（/us/**, /cs/**, /ls/** 等）
-  - 集成全局 CORS 配置
-  - StripPrefix=1 过滤器去除路径前缀
-
-#### 2. 认证授权模块（tj-auth）
-
-多子模块结构：
-- **tj-auth-common**: 认证公共组件
-- **tj-auth-service**: 认证服务（独立部署）
-- **tj-auth-resource-sdk**: 资源服务器 SDK（被其他服务依赖）
-- **tj-auth-gateway-sdk**: 网关认证 SDK（被网关依赖）
-
-#### 3. 业务服务模块
-
-每个服务都是独立的微服务，通过网关路由访问：
-
-- **tj-user** (us): 用户服务
-- **tj-course** (cs): 课程服务（端口 8086）
-- **tj-learning** (ls): 学习服务
-- **tj-exam** (es): 考试服务
-- **tj-trade** (ts): 交易服务
-- **tj-pay** (ps): 支付服务
-- **tj-promotion** (prs): 营销服务
-- **tj-search** (ss): 搜索服务
-- **tj-media** (ms): 媒体服务
-- **tj-data** (ds): 数据服务
-- **tj-remark** (rs): 评论服务
-- **tj-message** (sms): 消息服务
-- **tj-aigc** (ags): AIGC 服务（端口 8094）
-
-部分服务采用 DDD 分层结构（如 tj-message、tj-pay）：
-- `*-domain`: 领域层（实体、值对象）
-- `*-api`: API 接口定义
-- `*-service`: 服务实现层
-
-### 服务间通信
-
-1. **同步调用**: 使用 Feign Client（定义在 tj-api 模块）
-   - 例如：`UserClient`, `CourseClient`, `TradeClient` 等
-   - Feign 客户端按业务域组织在 `tj-api/client` 目录下
-
-2. **异步消息**: 使用 RabbitMQ（Spring AMQP）
-
-3. **网关路由**: 所有外部请求通过 tj-gateway 统一入口
-
-### 配置管理
-
-- 每个服务有多环境配置：
-  - `application.yml`: 主配置
-  - `application-local.yml`: 本地开发
-  - `application-dev.yml`: 开发环境
-  - `application-test.yml`: 测试环境
-- 使用 Spring Cloud Bootstrap 加载配置
-- 通过 `spring.profiles.active` 切换环境
-
-### 数据库设计
-
-- 每个服务有独立数据库（通过 `tj.jdbc.database` 配置）
-- 例如：course-service 使用 `tj_course` 数据库
-- 使用 MyBatis Plus 作为 ORM 框架
+参数：`-c` 容器名称，`-n` 项目名称（jar 文件名），`-d` 项目路径（相对于 `/usr/local/src/tianji/tjxt`），`-p` 应用端口，`-o` JVM 参数（可选），`-a` 调试端口（0 表示普通模式）。
 
 ## 开发约定
 
-### 服务端口分配
+- 必须使用 Java 17。
+- 本仓库所有代码、配置和脚本文件均为 UTF-8 编码；在 Windows/PowerShell 下读取中文文件必须显式使用 UTF-8（如 `Get-Content -Encoding UTF8`），不能按 GBK/系统默认编码判断文件内容是否乱码。
+- 发现中文显示为乱码时，先区分“终端显示编码问题”和“文件字节已损坏”：必要时用 UTF-8 读取或字节检查确认；未经确认，不做转码修复。
+- 主分支为 `stu`，创建 PR 时以 `stu` 为目标分支。
+- `course-service` 和 `aigc-service` 允许循环引用（`allow-circular-references: true`）。
+- 容器镜像使用阿里云镜像仓库：`registry.cn-beijing.aliyuncs.com/itcast/openjdk:17-jdk-eclipse-temurin`。
+- 服务端口和详细技术约定见 [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md)。
 
-- tj-gateway: 10010
-- tj-course: 8086
-- tj-aigc: 8094
-- 其他服务端口参考各自 application.yml
+## 本地 VMware 虚拟机操作约定
 
-### API 文档
+涉及当前本地 VMware 虚拟机的 SSH、网络、Nginx、Docker、前端部署或网关排查时，先阅读 [`docs/VMWARE_LOCAL_ACCESS.md`](docs/VMWARE_LOCAL_ACCESS.md)，再执行实时检查和操作。该文档是本地虚拟机环境的详细索引和操作手册。
 
-- 使用 Knife4j（Swagger 3）
-- 配置在各服务的 `application.yml` 中：
-  ```yaml
-  tj:
-    swagger:
-      enable: true
-      package-path: com.tianji.xxx.controller
-      title: 服务标题
-  ```
-- 访问地址：`http://localhost:{port}/doc.html`
+- 默认使用 SSH，不使用 Telnet；专用私钥为 `C:\Users\31241\.ssh\tjxt_vm_ed25519`。
+- 不得读取、输出或提交私钥内容，不得把密码、令牌等凭据写入项目文件、日志或命令参数。
+- 删除、覆盖、重置、停服、修改网络/防火墙、重启服务等不可逆操作，必须先获得明确确认。
 
-### 认证与鉴权
+## 详细文档索引
 
-- 使用自定义认证框架（tj-auth）
-- 通过 SDK 方式集成：
-  - 网关集成 `tj-auth-gateway-sdk`
-  - 资源服务集成 `tj-auth-resource-sdk`
-- 配置项：`tj.auth.resource.enable`
+修改敏感区域前，先阅读对应设计文档：
 
-### 代码分层
-
-典型 Controller 层路径：`src/main/java/com/tianji/{service}/controller`
-
-### 常见依赖
-
-- 所有服务都依赖 `tj-common` 获取公共工具
-- 需要跨服务调用时依赖 `tj-api` 中的 Feign Client
-- Lombok 用于减少样板代码
-- 使用 Jakarta EE 9+ 规范（jakarta.servlet）
-
-## 注意事项
-
-1. **Java 版本**: 必须使用 Java 17
-2. **编码**: 统一使用 UTF-8
-3. **循环依赖**: course-service 和 aigc-service 允许循环引用（`allow-circular-references: true`）
-4. **Git 分支**: 主分支为 `stu`，创建 PR 时应以 `stu` 为目标分支
-5. **容器化**: 使用阿里云镜像仓库（registry.cn-beijing.aliyuncs.com/itcast/openjdk:17-jdk-eclipse-temurin）
-
-## AIGC 服务特别说明
-
-### 服务概览
-
-tj-aigc 是天机学堂的 AI 生成式内容服务，提供智能对话、课程推荐、语音合成等 AI 能力。
-
-### 核心特性
-
-#### 1. 多智能体架构（Multi-Agent System）
-
-采用路由智能体架构，根据用户意图动态分发到不同专业智能体：
-
-- **RouteAgent（路由智能体）**: 负责分析用户意图，将请求路由到合适的专业智能体
-- **RecommendAgent（课程推荐智能体）**: 基于用户需求和 Elasticsearch 向量检索推荐课程
-- **ConsultAgent（课程咨询智能体）**: 解答课程相关问题
-- **BuyAgent（课程购买智能体）**: 处理下单购买流程，集成交易服务
-- **KnowledgeAgent（知识讲解智能体）**: 提供知识点讲解和答疑
-
-智能体类型定义：`com.tianji.aigc.enums.AgentTypeEnum`
-
-#### 2. 混合存储架构（Hybrid Storage）
-
-采用 Redis + MongoDB 混合存储方案优化对话管理：
-
-- **Redis 热数据存储**:
-  - 存储最近 20 轮对话作为 AI 上下文
-  - 提供毫秒级响应速度
-  - 防止 Token 超限（Context Window Exceeded）
-  - 自动过期时间：3 天
-
-- **MongoDB 冷数据存储**:
-  - 持久化全量历史对话记录
-  - 支持前端查询完整聊天历史
-  - 集合：`chat_message`
-  - 索引字段：`sessionId`, `createTime`
-
-核心实现：
-- `HybridChatMemory`: 混合存储实现（实现 Spring AI 的 `ChatMemory` 接口）
-- `RedisChatMemory`: Redis 存储实现
-- 数据模型：`ChatMessagePO`, `ChatSession`
-
-#### 3. 向量检索（Vector Search）
-
-集成 Elasticsearch 作为向量数据库：
-
-- 用于课程内容的语义检索
-- 支持课程推荐智能体的相似度匹配
-- 依赖：`spring-ai-elasticsearch-store-spring-boot-starter`
-- Elasticsearch 版本：8.15.5
-
-#### 4. AI 模型集成
-
-支持多种 AI 模型接入：
-
-- **阿里云通义千问**:
-  - Spring AI Alibaba Starter 1.0.0-M6.1
-  - DashScope SDK 2.19.0
-  - 配置类：`DashScopeProperties`
-
-- **OpenAI API**:
-  - Spring AI OpenAI Starter
-  - 支持 ChatGPT 模型和 TTS（Text-to-Speech）
-  - 实现类：`OpenAIAudioServiceImpl`
-
-配置类：`SpringAIConfig`, `AIProperties`
-
-#### 5. 流式响应（Server-Sent Events）
-
-- 支持 SSE 流式输出，实现打字机效果
-- 接口：`POST /chat` (produces = `text/event-stream`)
-- 返回类型：`Flux<ChatEventVO>` (响应式编程)
-- 事件类型：`ChatEventTypeEnum` (消息内容、工具调用、结束标记等)
-
-#### 6. 文字转语音（TTS）
-
-- 提供流式 TTS 接口
-- 接口：`POST /audio/tts-stream` (produces = `audio/mp3`)
-- 返回类型：`ResponseBodyEmitter`
-- 实现：基于 OpenAI TTS API
-
-### 系统提示词管理
-
-系统提示词（System Prompt）通过 Nacos 配置中心动态管理：
-
-```yaml
-tj:
-  ai:
-    prompt:
-      system:
-        route-agent:
-          data-id: route-agent-system-message.txt
-        recommend-agent:
-          data-id: recommend-agent-system-message.txt
-        buy-agent:
-          data-id: buy-agent-system-message.txt
-        consult-agent:
-          data-id: consult-agent-system-message.txt
-        knowledge-agent:
-          data-id: knowledge-agent-system-message.txt
-```
-
-配置类：`SystemPromptConfig`
-
-### 工具调用（Function Calling）
-
-智能体可调用外部工具增强能力：
-
-- **CourseTools**: 课程查询工具（集成 Elasticsearch 向量检索）
-- **OrderTools**: 下单工具（集成 TradeClient）
-- 工具结果存储：`ToolResultHolder`
-
-### 主要接口
-
-- **对话接口**: `POST /chat` - SSE 流式对话
-- **停止对话**: `POST /chat/stop` - 中断当前会话
-- **文本对话**: `POST /chat/text` - 非流式对话
-- **会话管理**: `GET /sessions` - 查询会话列表
-- **会话详情**: `GET /sessions/{id}` - 查询历史消息
-- **语音合成**: `POST /audio/tts-stream` - 文字转语音流式输出
-- **向量化**: 嵌入相关接口（`EmbeddingController`）
-
-### 数据库
-
-- **MySQL 数据库**: `tj_aigc`
-  - 表：`chat_session` (会话元数据)
-  - Mapper: `ChatSessionMapper`
-
-- **MongoDB 集合**: `chat_message`
-  - 文档结构：sessionId, type, content, createTime
-
-### 关键配置
-
-```yaml
-server:
-  port: 8094
-
-spring:
-  application:
-    name: aigc-service
-
-tj:
-  jdbc:
-    database: tj_aigc
-  ai:
-    user-id: 9999  # 默认用户 ID
-  auth:
-    resource:
-      enable: true
-```
-
-### 开发注意事项
-
-1. **异步处理**: MongoDB 写入建议使用异步方式，避免阻塞流式响应
-2. **Token 管理**: Redis 中的对话数量限制为 20 条，防止超出模型 Token 限制
-3. **索引优化**: MongoDB 的 `sessionId` 和 `createTime` 字段必须建立索引
-4. **配置中心**: 系统提示词存储在 Nacos，修改后需重启服务生效
-5. **循环依赖**: 该服务允许循环引用（`allow-circular-references: true`）
-6. **响应式编程**: 大量使用 Reactor（Flux/Mono），需熟悉响应式编程模型
-
-## 相关文档
-
-修改以下敏感区域前，先阅读对应设计文档：
-
-- AIGC 对话存储改造方案：`tj-aigc/src/main/resources/doc/README_CHAT_REFACTOR.md`
-- 优惠券异步领券方案：`tj-promotion/src/main/resources/doc/COUPON_ASYNC_RECEIVE.md`
-- 优惠券 Lua 脚本优化：`tj-promotion/src/main/resources/doc/COUPON_LUA_OPTIMIZATION.md`
+- [项目总体介绍](docs/PROJECT_OVERVIEW.md)
+- [模块文档索引](docs/README.md)
+- AIGC 对话存储改造：`tj-aigc/src/main/resources/doc/README_CHAT_REFACTOR.md`
+- 优惠券异步领券：`tj-promotion/src/main/resources/doc/COUPON_ASYNC_RECEIVE.md`
+- 优惠券 Lua 优化：`tj-promotion/src/main/resources/doc/COUPON_LUA_OPTIMIZATION.md`
 - 兑换码安全重构：`tj-promotion/src/main/resources/doc/exchange-code-security-refactoring.md`
