@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "TJXT 核心架构",
+    "locale": "zh-CN",
+    "output": "tjxt-core-architecture.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "browser", "type": "external", "label": "浏览器", "sublabel": "Web Client", "pos": [40, 360], "size": [150, 68] },
+    { "id": "gateway", "type": "backend", "label": "网关", "sublabel": "gateway-service :10010", "tag": "统一 API 入口", "pos": [280, 360], "size": [180, 68] },
+    { "id": "auth", "type": "security", "label": "认证服务", "sublabel": "auth-service :8081", "tag": "登录 / JWT / RBAC", "pos": [300, 100], "size": [180, 72] },
+    { "id": "course", "type": "backend", "label": "课程服务", "sublabel": "course-service :8086", "tag": "课程与目录", "pos": [555, 250], "size": [190, 74] },
+    { "id": "learning", "type": "backend", "label": "学习服务", "sublabel": "learning-service :8090", "tag": "课表 / 进度 / 积分", "pos": [555, 515], "size": [190, 74] },
+    { "id": "redis", "type": "database", "label": "Redis", "sublabel": "共享缓存 / 高速状态", "tag": "JTI · 权限 · 进度", "pos": [825, 100], "size": [190, 72] },
+    { "id": "mysql", "type": "database", "label": "MySQL", "sublabel": "服务独立数据库", "tag": "tj_course · tj_learning", "pos": [1080, 250], "size": [190, 74] },
+    { "id": "rabbitmq", "type": "messagebus", "label": "RabbitMQ", "sublabel": "Spring AMQP", "tag": "order.* · learning.topic", "pos": [900, 515], "size": [190, 72] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "TJXT 服务端", "wraps": ["gateway", "auth", "course", "learning", "redis", "mysql", "rabbitmq"], "pad": 34 }
+  ],
+  "connections": [
+    { "id": "browser-to-gateway", "from": "browser", "to": "gateway", "label": "HTTPS / 业务请求", "variant": "emphasis" },
+    { "id": "gateway-to-auth", "from": "gateway", "to": "auth", "label": "路由 /as/**", "variant": "security", "fromSide": "top", "toSide": "bottom", "labelDx": -70 },
+    { "id": "auth-to-gateway", "from": "auth", "to": "gateway", "label": "JWKS / JWT 鉴权", "variant": "security", "fromSide": "bottom", "toSide": "top", "labelDx": 70 },
+    { "id": "gateway-to-course", "from": "gateway", "to": "course", "label": "路由 /cs/**", "variant": "emphasis" },
+    { "id": "gateway-to-learning", "from": "gateway", "to": "learning", "label": "路由 /ls/**", "variant": "emphasis" },
+    { "id": "learning-to-course", "from": "learning", "to": "course", "label": "Feign / 课程信息", "variant": "dashed", "fromSide": "top", "toSide": "bottom" },
+    { "id": "auth-to-redis", "from": "auth", "to": "redis", "label": "JTI / 权限缓存", "variant": "security" },
+    { "id": "course-to-redis", "from": "course", "to": "redis", "label": "分类统计缓存", "fromSide": "top", "toSide": "bottom" },
+    { "id": "learning-to-redis", "from": "learning", "to": "redis", "label": "签到 / 进度 / 排行", "fromSide": "right", "toSide": "bottom", "via": [[790, 552], [790, 620], [1295, 620], [1295, 190], [920, 190]], "labelAt": [1040, 620] },
+    { "id": "course-to-mysql", "from": "course", "to": "mysql", "label": "tj_course / SQL" },
+    { "id": "learning-to-mysql", "from": "learning", "to": "mysql", "label": "tj_learning / SQL", "fromSide": "right", "toSide": "right", "via": [[790, 552], [790, 650], [1320, 650], [1320, 287]], "labelAt": [1050, 650] },
+    { "id": "course-to-rabbitmq", "from": "course", "to": "rabbitmq", "label": "发布 course.up", "variant": "dashed", "fromSide": "bottom", "toSide": "right", "via": [[650, 334], [1200, 334], [1200, 551]] },
+    { "id": "learning-to-rabbitmq", "from": "learning", "to": "rabbitmq", "label": "事件消息", "variant": "dashed", "fromSide": "right", "toSide": "left", "labelDy": -45 }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "入口与鉴权", "items": ["浏览器通过网关进入 TJXT", "认证服务负责登录与访问令牌校验"] },
+    { "dot": "emerald", "title": "核心业务", "items": ["网关路由到课程服务和学习服务", "课程、学习领域分别承载业务能力"] },
+    { "dot": "violet", "title": "数据与事件", "items": ["Redis 提供缓存和高速状态", "MySQL 持久化数据，RabbitMQ 传递异步事件"] }
+  ]
+}

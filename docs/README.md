@@ -2,7 +2,7 @@
 
 基于 Spring Cloud 的微服务在线教育平台（Java 17 / Spring Boot 3.3.5 / Spring Cloud Alibaba）。每个模块一份详细文档，覆盖模块职责、目录结构、接口清单、核心业务逻辑、数据模型、配置、依赖关系与注意事项。
 
-> 项目总体说明见根目录 `AGENTS.md`；本文档以**当前磁盘代码**为准（工作区存在未提交修改）。
+> 项目总体说明见 [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md)；开发代理的强制约束见根目录 `AGENTS.md`；本文档以**当前磁盘代码**为准（工作区存在未提交修改）。
 
 ## 服务总览
 
