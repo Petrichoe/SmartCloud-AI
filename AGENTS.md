@@ -39,6 +39,16 @@ mvn test -Dtest=YourTestClass
 mvn test -Dtest=YourTestClass#testMethod
 ```
 
+**Docker 部署**
+
+项目包含 `startup.sh` 脚本用于 Docker 部署：
+
+```bash
+./startup.sh -c container_name -n project_name -d project_path -p port -o "java_opts" -a debug_port
+```
+
+参数：`-c` 容器名称，`-n` 项目名称（jar 文件名），`-d` 项目路径（相对于 `/usr/local/src/tianji/tjxt`），`-p` 应用端口，`-o` JVM 参数（可选），`-a` 调试端口（0 表示普通模式）。
+
 ## 前端项目（tj-portal-src）
 
 前端用户端代码不在本仓库目录内，位于：
@@ -85,16 +95,6 @@ npm run preview
 
 注意：前端 README 中把 `dev` 和 `start` 的 mock/测试说明写反了；以 `package.json` 为准，其中 `npm run dev` 是 `development` 模式，`npm run start` 是 `mock` 模式。`vite.config.js` 当前没有启用 `loadEnv`，代理地址是固定配置，`--mode` 不会自动切换后端地址。README 记录的初始开发环境为 Node.js `v17.8.0`、npm `8.5.5` 或 pnpm `6.32.8`。
 
-**Docker 部署**
-
-项目包含 `startup.sh` 脚本用于 Docker 部署：
-
-```bash
-./startup.sh -c container_name -n project_name -d project_path -p port -o "java_opts" -a debug_port
-```
-
-参数：`-c` 容器名称，`-n` 项目名称（jar 文件名），`-d` 项目路径（相对于 `/usr/local/src/tianji/tjxt`），`-p` 应用端口，`-o` JVM 参数（可选），`-a` 调试端口（0 表示普通模式）。
-
 ## 开发约定
 
 - 必须使用 Java 17。
@@ -105,6 +105,19 @@ npm run preview
 - 容器镜像使用阿里云镜像仓库：`registry.cn-beijing.aliyuncs.com/itcast/openjdk:17-jdk-eclipse-temurin`。
 - 服务端口和详细技术约定见 [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md)。
 
+## 面试笔记使用约定
+
+用户的面试准备笔记位于外部目录：
+
+`D:\kun\kun file\kariox\_vault\计算机专业\面试圣经`
+
+- 默认情况下，不读取、不检索、不引用该目录中的任何内容；即使问题涉及 Java、Spring、微服务或面试，也不能据此自动访问笔记。
+- 只有当用户明确要求“结合我的面试笔记”“结合面试圣经”“结合上述笔记”或提出含义明确的同类请求时，才读取与当前问题相关的笔记。
+- 用户明确要求后，仅按需读取相关文件，不要无目的地扫描整个笔记目录。读取笔记时必须显式使用 UTF-8 编码。
+- 结合笔记回答时，要同时核对本项目中的实际代码、配置、架构和调用链：明确区分笔记中的通用知识与项目中已经验证的实现，不得把笔记内容直接当作项目事实；如果笔记与项目实现不一致，要指出差异并以代码证据为准。
+- 对笔记内容默认只读，不得随意改写、补充、删减或润色。只有在确认笔记中的内容存在事实或技术错误时，才指出错误、说明依据并给出修正内容；未经用户明确同意，不直接修改外部笔记文件。
+- 如果用户没有明确要求结合笔记，则只依据仓库内容和用户在当前对话中提供的信息回答，不访问上述笔记目录。
+
 ## 本地 VMware 虚拟机操作约定
 
 涉及当前本地 VMware 虚拟机的 SSH、网络、Nginx、Docker、前端部署或网关排查时，先阅读 [`docs/VMWARE_LOCAL_ACCESS.md`](docs/VMWARE_LOCAL_ACCESS.md)，再执行实时检查和操作。该文档是本地虚拟机环境的详细索引和操作手册。
@@ -112,6 +125,10 @@ npm run preview
 - 默认使用 SSH，不使用 Telnet；专用私钥为 `C:\Users\31241\.ssh\tjxt_vm_ed25519`。
 - 不得读取、输出或提交私钥内容，不得把密码、令牌等凭据写入项目文件、日志或命令参数。
 - 删除、覆盖、重置、停服、修改网络/防火墙、重启服务等不可逆操作，必须先获得明确确认。
+
+## 本地接口压测约定
+
+接口识别、合成数据、JMeter 执行、结果统计和临时数据清理的通用流程见 [`docs/LOCAL_API_LOAD_TEST_GUIDE.md`](docs/LOCAL_API_LOAD_TEST_GUIDE.md)。
 
 ## 详细文档索引
 

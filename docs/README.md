@@ -54,3 +54,8 @@
 - 优惠券异步领券：`tj-promotion/src/main/resources/doc/COUPON_ASYNC_RECEIVE.md`
 - 优惠券 Lua 优化：`tj-promotion/src/main/resources/doc/COUPON_LUA_OPTIMIZATION.md`
 - 兑换码安全重构：`tj-promotion/src/main/resources/doc/exchange-code-security-refactoring.md`
+
+## 排障与解决方案
+
+- [解决方案目录](solutions/README.md)
+- [AIGC：qwen3.8-flash 报 `url error`](solutions/aigc-dashscope-qwen38-flash-url-error.md)
