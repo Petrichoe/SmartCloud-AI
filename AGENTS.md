@@ -128,7 +128,7 @@ npm run preview
 
 ## 本地接口压测约定
 
-接口识别、合成数据、JMeter 执行、结果统计和临时数据清理的通用流程见 [`docs/LOCAL_API_LOAD_TEST_GUIDE.md`](docs/LOCAL_API_LOAD_TEST_GUIDE.md)。
+涉及接口压测任务时，使用项目级 Skill [`local-api-load-test`](.agents/skills/local-api-load-test/SKILL.md)，并参考 [`docs/LOCAL_API_LOAD_TEST_GUIDE.md`](docs/LOCAL_API_LOAD_TEST_GUIDE.md) 获取项目环境和案例信息。
 
 ## 详细文档索引
 

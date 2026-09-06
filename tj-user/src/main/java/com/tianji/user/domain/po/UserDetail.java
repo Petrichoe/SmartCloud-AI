@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@Accessors(chain = true)
+@Accessors(chain = true) //可以链式调用new UserDetail().setName("张三").setGender(0).setCity("北京");
 @TableName("user_detail")
 public class UserDetail implements Serializable {
 
