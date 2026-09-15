@@ -33,8 +33,8 @@ public class LockAspect {
     }
 
     //通过环绕加锁，方法执行前加锁，方法执行后根据注解使用解锁
-    @Around("@annotation(properties)")
-    public Object handleLock(ProceedingJoinPoint pjp, Lock properties) throws Throwable {
+    @Around("@annotation(properties)") //properties.name();   properties.leaseTime();   properties.autoUnlock(); 对应的Lock
+    public Object handleLock(ProceedingJoinPoint pjp, Lock properties) throws Throwable { //Lock properties对应@Lock  ProceedingJoinPoint pjp 可以理解为“当前被拦截的方法调用对象
         if (!properties.autoUnlock() && properties.leaseTime() <= 0) {
             // 不手动释放锁时，必须指定leaseTime时间
             throw new BizIllegalException("leaseTime不能为空");
@@ -51,7 +51,7 @@ public class LockAspect {
         }
         try {
             // 4.执行被代理方法
-            return pjp.proceed();
+            return pjp.proceed();// 真正执行目标方法
         } finally {
             // 5.释放锁
             if (properties.autoUnlock()) {
