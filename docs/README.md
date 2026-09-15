@@ -41,6 +41,8 @@
 
 ## 关键跨服务链路
 
+> 购买 → 报名 → 学习 → 积分排行榜的**代码级完整调用链**详见 [`BUSINESS_FLOW.md`](BUSINESS_FLOW.md)。
+
 1. **登录**：前端 → gateway（`AccountAuthFilter` 验 JWT）→ 业务服务（tj-auth-resource-sdk 拦截器 → `UserContext`）
 2. **购买上课**：trade 下单 → pay 支付/回调 → MQ `pay.success`/延迟查单 → trade 发 `order.pay` → learning 入课表 → learning 发积分 MQ → ZSet 排行榜
 3. **课程上架**：course 草稿校验上架 → MQ `course.up` → search 同步 ES 索引

@@ -52,6 +52,11 @@ public class PayOrderServiceImpl extends ServiceImpl<PayOrderMapper, PayOrder> i
     private Map<String, IPayService> payServiceChannels;
     private final RabbitMqHelper rabbitMqHelper;
 
+    /**
+     * 创建支付单
+     * @param payApplyDTO
+     * @return
+     */
     @Override
     @Lock(name = PayConstants.RedisKeyFormatter.PAY_APPLY, leaseTime = 3, autoUnlock = false)
     public String applyPayOrder(PayApplyDTO payApplyDTO) {
