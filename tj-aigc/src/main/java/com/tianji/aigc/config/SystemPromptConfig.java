@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @RequiredArgsConstructor
 public class SystemPromptConfig {
 
+
     private final NacosConfigManager nacosConfigManager;
     private final AIProperties aiProperties;
 

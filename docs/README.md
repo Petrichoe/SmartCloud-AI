@@ -4,6 +4,10 @@
 
 > 项目总体说明见 [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md)；开发代理的强制约束见根目录 `AGENTS.md`；本文档以**当前磁盘代码**为准（工作区存在未提交修改）。
 
+## 可观测性
+
+- [SkyWalking 接入与使用说明](SKYWALKING_SETUP.md)
+
 ## 服务总览
 
 | 模块 | 服务名 | 端口 | 网关前缀 | 存储 | 文档 |

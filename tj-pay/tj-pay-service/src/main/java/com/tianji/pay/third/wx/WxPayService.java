@@ -11,12 +11,14 @@ import com.tianji.pay.third.model.PrepayResponse;
 import com.tianji.pay.third.model.RefundResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
 @Slf4j
 @Service(PayConstants.WX_CHANNEL_CODE)
+@ConditionalOnProperty(prefix = "tj.pay.wx", name = "enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class WxPayService implements IPayService {
 

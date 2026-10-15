@@ -53,6 +53,7 @@ public class RefundOrderServiceImpl extends ServiceImpl<RefundOrderMapper, Refun
     private Map<String, IPayService> payServiceChannels;
 
     @Override
+    @Lock(name = PayConstants.RedisKeyFormatter.REFUND_APPLY, leaseTime = 10, autoUnlock = false)
     public RefundResultDTO applyRefund(RefundApplyDTO refundApplyDTO) {
         log.debug("准备申请退款，业务端退款订单号：{}", refundApplyDTO.getBizRefundOrderNo());
         // 1.幂等性校验
@@ -96,7 +97,6 @@ public class RefundOrderServiceImpl extends ServiceImpl<RefundOrderMapper, Refun
         }
     }
 
-    @Lock(name = PayConstants.RedisKeyFormatter.REFUND_APPLY, leaseTime = 10, autoUnlock = false)
     private RefundOrder checkIdempotent(RefundApplyDTO refundApplyDTO) {
         // 1.查询出退款单对应的支付单
         PayOrder payOrder = payOrderService.queryByBizOrderNo(refundApplyDTO.getBizOrderNo());

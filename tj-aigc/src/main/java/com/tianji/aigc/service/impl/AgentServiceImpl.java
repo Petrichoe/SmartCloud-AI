@@ -27,7 +27,7 @@ public class AgentServiceImpl implements ChatService {
     @Override
     public Flux<ChatEventVO> chat(String question, String sessionId) {
         // 先通过路由智能体，分析用户的意图，再执行后面的逻辑
-        String result = this.findAgentByType(AgentTypeEnum.ROUTE).process(question, sessionId); //判断需要哪个Agent
+        String result = this.findAgentByType(AgentTypeEnum.ROUTE).process(question, sessionId); //判断需要哪个Agent：让大模型返回需要什么Agent
         AgentTypeEnum agentTypeEnum = AgentTypeEnum.agentNameOf(result);
 
         Agent agent = this.findAgentByType(agentTypeEnum);

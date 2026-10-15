@@ -17,3 +17,7 @@ logs
 job
 
 templates
+
+# SkyWalking Java Agent is a local runtime dependency, not source code.
+tools/skywalking-agent/
+tools/*.tgz

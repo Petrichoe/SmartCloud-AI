@@ -19,3 +19,4 @@
 | 问题 | 模块 | 文档 |
 |---|---|---|
 | `qwen3.8-flash` 调用返回 `url error` | tj-aigc / DashScope | [查看排查与修复方法](aigc-dashscope-qwen38-flash-url-error.md) |
+| Codex 本地命令执行报 `setup refresh had errors` | 开发环境 / Codex Windows 沙箱 | [查看原因、回退与验证记录](codex-windows-sandbox-setup-refresh-error.md) |

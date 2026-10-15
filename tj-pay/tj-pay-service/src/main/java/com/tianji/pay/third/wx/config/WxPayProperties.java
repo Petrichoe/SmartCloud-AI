@@ -7,6 +7,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "tj.pay.wx")
 public class WxPayProperties{
     /**
+     * 是否启用微信支付
+     */
+    private boolean enabled;
+    /**
      * appId
      */
     private String appId;
