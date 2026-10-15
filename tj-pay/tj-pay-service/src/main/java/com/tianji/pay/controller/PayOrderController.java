@@ -40,7 +40,7 @@ public class PayOrderController {
         if(!PayType.NATIVE.equalsValue(payApplyDTO.getPayType())){
             throw new BadRequestException(PayErrorInfo.INVALID_PAY_TYPE);
         }
-        return payOrderService.applyPayOrder(payApplyDTO);
+        return payOrderService.applyPayOrder(payApplyDTO);//这里就直接进代理了，即handleLock里
     }
 
     @Operation(summary = "根据业务端订单id查询支付结果")

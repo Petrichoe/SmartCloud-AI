@@ -129,7 +129,7 @@ public abstract class AbstractAgent implements Agent { //使用抽象类可以�
         return this.dashScopeChatClient.prompt()
                 .system(promptSystem -> promptSystem.text(this.systemMessage()).params(this.systemMessageParams()))
                 .advisors(advisor -> advisor.advisors(this.advisors()).params(this.advisorParams(sessionId, requestId)))
-                .tools(this.tools())
+                .tools(this.tools())//这里的 this 指当前正在执行方法的那个对象。这次 agent 的实际对象是 RecommendAgent
                 .toolContext(this.toolContext(sessionId, requestId))
                 .user(question);
     }

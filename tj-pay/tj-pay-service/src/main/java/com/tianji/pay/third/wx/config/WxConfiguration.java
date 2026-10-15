@@ -9,6 +9,7 @@ import com.wechat.pay.contrib.apache.httpclient.cert.CertificatesManager;
 import com.wechat.pay.contrib.apache.httpclient.exception.HttpCodeException;
 import com.wechat.pay.contrib.apache.httpclient.exception.NotFoundException;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +30,10 @@ public class WxConfiguration {
     @Bean(destroyMethod = "stop")
     public CertificatesManager certificatesManager(WxPayProperties properties)
             throws HttpCodeException, GeneralSecurityException, IOException {
+        CertificatesManager certificatesManager = CertificatesManager.getInstance();
+        if (!properties.isEnabled()) {
+            return certificatesManager;
+        }
         // 1.加载私钥
         PrivateKey privateKey = PemUtil.readPemPrivateKey(
                 new ByteArrayInputStream(properties.getPrivateKey().getBytes(StandardCharsets.UTF_8)));
@@ -36,13 +41,13 @@ public class WxConfiguration {
         PrivateKeySigner privateKeySigner = new PrivateKeySigner(properties.getMchSerialNo(), privateKey);
         WechatPay2Credentials wechatPay2Credentials = new WechatPay2Credentials(properties.getMchId(), privateKeySigner);
         // 3.平台证书管理器
-        CertificatesManager certificatesManager = CertificatesManager.getInstance();
         certificatesManager.putMerchant(
                 properties.getMchId(), wechatPay2Credentials, properties.getApiV3Key().getBytes(StandardCharsets.UTF_8));
         return certificatesManager;
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "tj.pay.wx", name = "enabled", havingValue = "true")
     public CloseableHttpClient closeableHttpClient(WxPayProperties properties, CertificatesManager certificatesManager)
             throws NotFoundException {
         // 1.加载私钥

@@ -8,4 +8,4 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 WORKDIR /app
 ADD app.jar /app/app.jar
 
-ENTRYPOINT ["sh","-c","java  -jar $JAVA_OPTS /app/app.jar"]
+ENTRYPOINT ["sh","-c","exec java $JAVA_OPTS -jar /app/app.jar"]

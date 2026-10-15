@@ -20,7 +20,7 @@ public class CategoryCache {
     private final CategoryClient categoryClient;
 
     public Map<Long, CategoryBasicDTO> getCategoryMap() {
-        return categoryCaches.get("CATEGORY", key -> {
+        return categoryCaches.get("CATEGORY", key -> {//找到 "CATEGORY"：直接把已有的 Map 返回，不会执行 key -> { ... } 里面的 Feign 调用。
             // 1.从CategoryClient查询
             List<CategoryBasicDTO> list = categoryClient.getAllOfOneLevel();
             if (list == null || list.isEmpty()) {

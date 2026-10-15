@@ -39,7 +39,7 @@ public class LockAspect {
             // 不手动释放锁时，必须指定leaseTime时间
             throw new BizIllegalException("leaseTime不能为空");
         }
-        // 1.基于SPEL表达式解析锁的 name
+        // 1.基于SPEL表达式解析锁的 name   把模板具体变成锁名
         String name = getLockName(properties.name(), pjp);
         // 2.得到锁对象
         RLock rLock = properties.lockType().getLock(redissonClient, name);
