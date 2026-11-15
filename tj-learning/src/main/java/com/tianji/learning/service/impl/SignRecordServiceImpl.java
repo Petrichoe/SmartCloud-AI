@@ -64,7 +64,7 @@ public class SignRecordServiceImpl implements ISignRecordService {
         mqHelper.send(
                 MqConstants.Exchange.LEARNING_EXCHANGE,
                 MqConstants.Key.SIGN_IN,
-                SignInMessage.of(userId, rewardPoints + 1));
+                SignInMessage.of(userId, rewardPoints + 1, now));
         // 5.封装返回
         SignResultVO vo = new SignResultVO();
         vo.setSignDays(signDays);

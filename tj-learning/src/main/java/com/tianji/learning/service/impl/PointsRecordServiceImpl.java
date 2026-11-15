@@ -6,15 +6,22 @@ import com.tianji.common.utils.CollUtils;
 import com.tianji.common.utils.DateUtils;
 import com.tianji.common.utils.UserContext;
 import com.tianji.learning.constants.RedisConstants;
+import com.tianji.learning.domain.po.MqConsumeRecord;
 import com.tianji.learning.domain.po.PointsRecord;
 import com.tianji.learning.domain.vo.PointsStatisticsVO;
 import com.tianji.learning.enums.PointsRecordType;
+import com.tianji.learning.mapper.MqConsumeRecordMapper;
 import com.tianji.learning.mapper.PointsRecordMapper;
+import com.tianji.learning.mq.message.SignInMessage;
 import com.tianji.learning.service.IPointsRecordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +37,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PointsRecordServiceImpl extends ServiceImpl<PointsRecordMapper, PointsRecord> implements IPointsRecordService {
 
+    private static final String POINTS_CONSUMER_NAME = "learning-points";
+    private static final DefaultRedisScript<Long> SIGN_POINTS_BOARD_SCRIPT = new DefaultRedisScript<>("""
+            if redis.call('SISMEMBER', KEYS[1], ARGV[1]) == 1 then
+                return 0
+            end
+            redis.call('ZINCRBY', KEYS[2], ARGV[2], ARGV[3])
+            redis.call('SADD', KEYS[1], ARGV[1])
+            return 1
+            """, Long.class);
+
     private final StringRedisTemplate redisTemplate;
+    private final MqConsumeRecordMapper consumeRecordMapper;
 
     @Override
     public void addPointsRecord(Long userId, int points, PointsRecordType type) {
@@ -63,6 +81,51 @@ public class PointsRecordServiceImpl extends ServiceImpl<PointsRecordMapper, Poi
         // 4.更新总积分到Redis
         String key = RedisConstants.POINTS_BOARD_KEY_PREFIX + now.format(DateUtils.POINTS_BOARD_SUFFIX_FORMATTER);
         redisTemplate.opsForZSet().incrementScore(key, userId.toString(), realPoints);//将积分累加到 Redis ZSet: boards:yyyyMM
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void addSignPointsRecord(Long userId, int points, LocalDate signDate, String eventId) {
+        if (userId == null || signDate == null || !StringUtils.hasText(eventId)) {
+            throw new IllegalArgumentException("签到积分事件信息不能为空");
+        }
+        String expectedEventId = SignInMessage.buildEventId(userId, signDate);
+        if (!expectedEventId.equals(eventId)) {
+            throw new IllegalArgumentException("签到积分事件键与业务数据不匹配");
+        }
+
+        // 消费记录与积分明细在同一 MySQL 事务中提交，唯一键负责并发去重。
+        MqConsumeRecord consumeRecord = new MqConsumeRecord();
+        consumeRecord.setConsumerName(POINTS_CONSUMER_NAME);
+        consumeRecord.setBusinessKey(eventId);
+        if (consumeRecordMapper.insert(consumeRecord) != 1) {
+            throw new IllegalStateException("保存 MQ 消费记录失败");
+        }
+
+        PointsRecord record = new PointsRecord();
+        record.setUserId(userId);
+        record.setPoints(points);
+        record.setType(PointsRecordType.SIGN);
+        record.setCreateTime(signDate.atStartOfDay());
+        if (!save(record)) {
+            throw new IllegalStateException("保存签到积分明细失败");
+        }
+
+        // Redis 用事件键原子去重，避免命令已执行但响应丢失后，消费重试重复加分。
+        String season = signDate.format(DateUtils.POINTS_BOARD_SUFFIX_FORMATTER);
+        String eventSetKey = RedisConstants.POINTS_BOARD_SIGN_EVENT_KEY_PREFIX + season;
+        String boardKey = RedisConstants.POINTS_BOARD_KEY_PREFIX + season;
+        redisTemplate.execute(SIGN_POINTS_BOARD_SCRIPT, List.of(eventSetKey, boardKey),
+                eventId, Integer.toString(points), userId.toString());
+    }
+
+    @Override
+    public boolean isSignPointsProcessed(String eventId) {
+        QueryWrapper<MqConsumeRecord> wrapper = new QueryWrapper<>();
+        wrapper.lambda()
+                .eq(MqConsumeRecord::getConsumerName, POINTS_CONSUMER_NAME)
+                .eq(MqConsumeRecord::getBusinessKey, eventId);
+        return consumeRecordMapper.selectCount(wrapper) > 0;
     }
 
     @Override

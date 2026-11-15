@@ -9,4 +9,8 @@ public interface RedisConstants {
      * 积分排行榜的Key的前缀：boards:202301
      */
     String POINTS_BOARD_KEY_PREFIX = "boards:";
+    /**
+     * 签到积分榜幂等事件集合前缀：boards:sign:events:yyyyMM
+     */
+    String POINTS_BOARD_SIGN_EVENT_KEY_PREFIX = "boards:sign:events:";
 }

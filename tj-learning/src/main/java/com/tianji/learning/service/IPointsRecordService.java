@@ -5,6 +5,7 @@ import com.tianji.learning.domain.po.PointsRecord;
 import com.tianji.learning.domain.vo.PointsStatisticsVO;
 import com.tianji.learning.enums.PointsRecordType;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -16,6 +17,10 @@ import java.util.List;
  */
 public interface IPointsRecordService extends IService<PointsRecord> {
     void addPointsRecord(Long userId, int points, PointsRecordType type);
+
+    void addSignPointsRecord(Long userId, int points, LocalDate signDate, String eventId);
+
+    boolean isSignPointsProcessed(String eventId);
 
     List<PointsStatisticsVO> queryMyPointsToday();
 
